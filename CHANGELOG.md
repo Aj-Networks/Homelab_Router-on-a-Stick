@@ -9,6 +9,14 @@ All notable changes to this project are documented here.
 ### Done
 - Tailscale remote access - advertised routes for `10.10.1.0/24` and `10.10.10.0/24` configured and tested (March 2026)
 
+### Fixed
+- GS308E static DHCP moved from VLAN10 (wrong tab, wrong subnet) to LAN at `10.10.1.100`
+- LAN DHCP range shrunk to `10.10.1.10 - 10.10.1.99` to avoid static mapping conflict
+- VLAN 50 firewall docs updated from 2 rules to actual 5 rules
+- VLAN 10 DHCP range corrected from .253 to .245 to match pfSense
+- Clarified VLAN 50 WAN NAT behavior in docs
+- Added temp switch management rule note to VLAN 10 firewall docs
+
 ### Exploring
 - Suricata IDS / pfBlockerNG - evaluating options for alert-only monitoring on WAN and user VLANs
 - Centralized logging - syslog server for firewall and IDS alerts
