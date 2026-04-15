@@ -16,6 +16,8 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 | 6 | Pass | any | VLAN10 net | any | any | Route via VPN_FAILOVER gateway |
 | 7 | Block | IPv6 | any | any | any | Drop all IPv6 |
 
+> **Note:** A temporary rule allowing VLAN 10 to reach switch management at 10.10.1.100 (TCP 80/443) exists but is kept disabled. It is only enabled during active lab work and disabled after.
+
 ---
 
 ## VLAN 20 - IoT (10.10.20.0/24)
