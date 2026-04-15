@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+*~
+
+# pfSense backups and credentials (never commit these)
+*.xml
+*.key
+*.pem
+*.conf

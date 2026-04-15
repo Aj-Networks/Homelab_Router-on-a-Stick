@@ -1,0 +1,89 @@
+# Firewall Rules
+
+Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-to-bottom** - first match wins.
+
+---
+
+## VLAN 10 - Users (10.10.10.0/24)
+
+| # | Action | Protocol | Source | Destination | Port | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Pass | UDP | VLAN10 net | 10.10.10.1 | 53 | Allow DNS to pfSense only |
+| 2 | Pass | TCP | VLAN10 net | 10.10.20.5 | 9100 | Allow printing to printer |
+| 3 | Block | TCP/UDP | VLAN10 net | DOH_IPS alias | 443, 853 | Block DNS-over-HTTPS / DoT |
+| 4 | Block | TCP/UDP | VLAN10 net | any | 53 | Block plain DNS to WAN |
+| 5 | Block | any | VLAN10 net | RFC1918 alias | any | Block inter-VLAN traffic |
+| 6 | Pass | any | VLAN10 net | any | any | Route via VPN_FAILOVER gateway |
+| 7 | Block | IPv6 | any | any | any | Drop all IPv6 |
+
+---
+
+## VLAN 20 - IoT (10.10.20.0/24)
+
+| # | Action | Protocol | Source | Destination | Port | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Pass | UDP | VLAN20 net | 10.10.20.1 | 53 | Allow DNS to pfSense only |
+| 2 | Block | TCP/UDP | VLAN20 net | DOH_IPS alias | 443, 853 | Block DoH / DoT |
+| 3 | Block | TCP/UDP | VLAN20 net | any | 53 | Block plain DNS to WAN |
+| 4 | Block | any | VLAN20 net | RFC1918 alias | any | Block inter-VLAN traffic |
+| 5 | Pass | any | VLAN20 net | any | any | Route via VPN_FAILOVER gateway |
+| 6 | Block | IPv6 | any | any | any | Drop all IPv6 |
+
+---
+
+## VLAN 30 - Guest (10.10.30.0/24)
+
+| # | Action | Protocol | Source | Destination | Port | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Pass | UDP | VLAN30 net | 10.10.30.1 | 53 | Allow DNS to pfSense only |
+| 2 | Block | TCP/UDP | VLAN30 net | DOH_IPS alias | 443, 853 | Block DoH / DoT |
+| 3 | Block | TCP/UDP | VLAN30 net | any | 53 | Block plain DNS to WAN |
+| 4 | Block | any | VLAN30 net | RFC1918 alias | any | Block inter-VLAN traffic |
+| 5 | Pass | any | VLAN30 net | any | any | Route via VPN_FAILOVER gateway |
+| 6 | Block | IPv6 | any | any | any | Drop all IPv6 |
+
+---
+
+## VLAN 40 - Lab (10.10.40.0/24)
+
+| # | Action | Protocol | Source | Destination | Port | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Pass | UDP | VLAN40 net | 10.10.40.1 | 53 | Allow DNS to pfSense only |
+| 2 | Block | TCP/UDP | VLAN40 net | DOH_IPS alias | 443, 853 | Block DoH / DoT |
+| 3 | Block | TCP/UDP | VLAN40 net | any | 53 | Block plain DNS to WAN |
+| 4 | Block | any | VLAN40 net | RFC1918 alias | any | Block inter-VLAN traffic |
+| 5 | Pass | any | VLAN40 net | any | any | Route via VPN_FAILOVER gateway |
+| 6 | Block | IPv6 | any | any | any | Drop all IPv6 |
+
+> **Note:** VLAN 40 is excluded from Suricata IDS monitoring - Cisco lab protocols generate high false-positive noise.
+
+---
+
+## VLAN 50 - Management (10.10.50.0/24)
+
+| # | Action | Protocol | Source | Destination | Port | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Pass | UDP | VLAN50 net | 10.10.50.1 | 53 | Allow DNS to pfSense only |
+| 2 | Pass | any | VLAN50 net | any | any | Full access - routes via WAN (no VPN) |
+
+> **Note:** VLAN 50 intentionally bypasses VPN and RFC1918 rules. It has direct WAN access and can reach all VLANs - this is for emergency admin access when something breaks.
+
+---
+
+## Aliases Referenced
+
+| Alias | Contents | Purpose |
+|---|---|---|
+| `DOH_IPS` | Known DoH provider IPs | Block encrypted DNS bypass on ports 443/853 |
+| `RFC1918` | 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 | Block all inter-VLAN routing |
+
+---
+
+## Key Design Decisions
+
+- **DNS is locked to pfSense** - clients cannot query external resolvers directly
+- **DoH/DoT blocked** - prevents bypassing DNS controls via encrypted DNS
+- **RFC1918 block enforces hard VLAN isolation** - no cross-VLAN traffic without an explicit rule above it
+- **VPN_FAILOVER is the default gateway** - all passing traffic exits through Mullvad, not raw WAN
+- **IPv6 fully blocked** - eliminates tunnel leak vectors
+- **VLAN 50 is the only exception** - intentional, for emergency admin access with direct WAN and full internal reach
