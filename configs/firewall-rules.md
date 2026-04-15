@@ -63,8 +63,11 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Pass | UDP | VLAN50 net | 10.10.50.1 | 53 | Allow DNS to pfSense only |
-| 2 | Pass | any | VLAN50 net | any | any | Full access - routes via WAN (no VPN) |
+| 1 | Pass | any | VLAN50 net | 10.10.50.1 | any | Allow access to pfSense gateway |
+| 2 | Block | TCP/UDP | VLAN50 net | any | 53 | Block plain DNS to WAN |
+| 3 | Block | TCP/UDP | VLAN50 net | DOH_IPS alias | 443-853 | Block DoH / DoT |
+| 4 | Pass | any | VLAN50 net | any | any | Direct internet - no VPN |
+| 5 | Block | IPv6 | VLAN50 net | any | any | Drop all IPv6 |
 
 > **Note:** VLAN 50 intentionally bypasses VPN and RFC1918 rules. It has direct WAN access and can reach all VLANs - this is for emergency admin access when something breaks.
 
