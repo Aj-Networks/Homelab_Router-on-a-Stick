@@ -34,7 +34,7 @@ All notable changes to this project are documented here.
 - 6 VLANs: Native (1), Users (10), IoT (20), Guest (30), Lab (40), Management (50)
 - Dual Mullvad WireGuard tunnels - Chicago (primary) + NYC (failover)
 - `VPN_FAILOVER` gateway group with automatic failover
-- Layered kill switch - manual outbound NAT with zero WAN rules, DoH/DoT block, port 53 block, RFC1918 inter-VLAN isolation, IPv6 block
+- Layered kill switch - manual outbound NAT with zero explicit WAN rules, DoH/DoT block, port 53 block, RFC1918 inter-VLAN isolation, IPv6 block
 - DNS locked to Mullvad resolvers through VPN tunnels - no ISP fallback
 - Netgear GS308E v4 configured with 802.1Q port assignments
 - Netgear R6400 set to AP-only mode on VLAN 10
