@@ -18,7 +18,7 @@ Interface, subnet, and purpose map for the Router-on-a-Stick topology. All VLANs
 
 ---
 
-## Reserved Physical Ports
+## Physical Ports
 
 | Port | Interface | Reserved For | State |
 |---|---|---|---|
