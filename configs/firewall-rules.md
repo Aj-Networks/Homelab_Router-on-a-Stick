@@ -4,6 +4,21 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 ---
 
+## LAN - Native (10.10.1.0/24)
+
+| # | Action | Protocol | Source | Destination | Port | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Block | TCP/UDP | LAN net | DOH_IPS alias | 443-853 | Block DoH / DoT |
+| 2 | Block | TCP/UDP | LAN net | any | 53 | Block DNS to WAN |
+| 3 | Pass | TCP | LAN net | MSFT_CONNECTIVITY alias | 443 | Microsoft connectivity check via WAN |
+| 4 | Pass | any | LAN net | LAN net | any | Allow LAN-to-LAN (no VPN) |
+| 5 | Pass | any | LAN net | any | any | Route via VPN_FAILOVER gateway |
+| 6 | Block | IPv6 | LAN net | any | any | Drop all IPv6 |
+
+> **Note:** LAN (VLAN 1) is the trunk native network used for switch management. It has no RFC1918 block - LAN devices can reach other VLANs by design. Rule #3 allows Microsoft connectivity checks to bypass VPN via WAN directly.
+
+---
+
 ## VLAN 10 - Users (10.10.10.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
