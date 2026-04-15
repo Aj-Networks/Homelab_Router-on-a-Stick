@@ -45,8 +45,8 @@ Two Mullvad WireGuard tunnels with automatic failover:
 
 If both tunnels drop, traffic gets blocked - not leaked. That's handled by a few layers working together:
 
-1. **Outbound NAT** - 12 manual rules map internal subnets to VPN interfaces only. There are zero WAN NAT rules, so if both tunnels are down, traffic has nowhere to go.
-2. **DoH/DoT block** - Prevents encrypted DNS bypass on ports 443 and 853.
+1. **Outbound NAT** - 12 manual rules map internal subnets to VPN interfaces only. There are zero explicit WAN outbound NAT rules, so if both tunnels are down, traffic has nowhere to go.
+2. **DoH/DoT block** - Prevents encrypted DNS bypass on ports 443-853.
 3. **Port 53 block** - No plain DNS to WAN.
 4. **RFC1918 block** - Blocks all inter-VLAN traffic (full /8, /12, /16 ranges).
 5. **IPv6 block** - All IPv6 dropped to prevent tunnel leak vectors.
@@ -84,7 +84,10 @@ Homelab_Router-on-a-Stick/
 │
 ├── diagrams/                        # Network topology and VLAN diagrams
 │   ├── network-topology.png
-│   └── vlan-ip-detail.png
+│   ├── vlan-ip-detail.png
+│   ├── FW6E.png
+│   ├── GS308E.png
+│   └── R6400.png
 │
 ├── docs/                            # Full PDF manuals (detailed writeups)
 │   ├── HOME_LAB_v2.pdf
