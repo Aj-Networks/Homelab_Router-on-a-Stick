@@ -20,7 +20,7 @@ Interface, subnet, and purpose map for the Router-on-a-Stick topology. All VLANs
 
 ## Physical Ports
 
-| Port | Interface | Reserved For | State |
+| Port | Interface | Purpose | State |
 |---|---|---|---|
 | Port 2 | igb1 | - | Trunk (active) |
 | Port 3 | igb2 | Out-of-Band (OOB) | Named, disabled |
