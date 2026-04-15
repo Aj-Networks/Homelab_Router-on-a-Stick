@@ -11,7 +11,7 @@
 
 | Port | Mode | PVID (Untagged) | Tagged VLANs | Connected Device |
 |---|---|---|---|---|
-| 1 | Trunk | 1 | 10, 20, 30, 40, 50 | pfSense igb1 (Port 7) |
+| 1 | Trunk | 1 | 10, 20, 30, 40, 50 | pfSense igb1 (Port 2) |
 | 2 | Access | 10 | - | Trusted PC |
 | 3 | Access | 10 | - | Netgear R6400 (AP) |
 | 4 | Access | 20 | - | Printer |
