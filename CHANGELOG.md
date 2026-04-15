@@ -16,6 +16,12 @@ All notable changes to this project are documented here.
 - VLAN 10 DHCP range corrected from .253 to .245 to match pfSense
 - Clarified VLAN 50 WAN NAT behavior in docs
 - Added temp switch management rule note to VLAN 10 firewall docs
+- VLAN 10 rule #1 updated to pass any (pfSense UI access for lab work)
+- VLANs 20, 30, 40 rule #1 locked down to UDP 53 only (DNS)
+- DoH/DoT port range corrected from "443, 853" to "443-853" across all VLANs
+- Added missing LAN (VLAN 1) firewall rules section
+- Added hardware images to repo structure diagram
+- Renamed "Reserved For" column to "Purpose" in physical ports table
 
 ### Exploring
 - Suricata IDS / pfBlockerNG - evaluating options for alert-only monitoring on WAN and user VLANs
