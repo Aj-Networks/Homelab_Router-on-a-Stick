@@ -2,7 +2,7 @@
 
 All 12 manual Outbound NAT rules as configured in pfSense 2.8.1. Mode is set to **Manual Outbound NAT**.
 
-There are **zero rules mapping internal subnets to WAN** - this is the foundation of the kill switch.
+There are **zero explicit WAN outbound NAT rules** - this is the foundation of the kill switch. VLAN 50 reaches WAN via the system default gateway without a manual NAT rule.
 
 ---
 
