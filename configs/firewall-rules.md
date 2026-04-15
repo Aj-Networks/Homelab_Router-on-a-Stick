@@ -8,7 +8,7 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Pass | UDP | VLAN10 net | 10.10.10.1 | 53 | Allow DNS to pfSense only |
+| 1 | Pass | any | VLAN10 net | 10.10.10.1 | any | Allow access to pfSense gateway |
 | 2 | Pass | TCP | VLAN10 net | 10.10.20.5 | 9100 | Allow printing to printer |
 | 3 | Block | TCP/UDP | VLAN10 net | DOH_IPS alias | 443, 853 | Block DNS-over-HTTPS / DoT |
 | 4 | Block | TCP/UDP | VLAN10 net | any | 53 | Block plain DNS to WAN |
@@ -16,7 +16,7 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 | 6 | Pass | any | VLAN10 net | any | any | Route via VPN_FAILOVER gateway |
 | 7 | Block | IPv6 | any | any | any | Drop all IPv6 |
 
-> **Note:** A temporary rule allowing VLAN 10 to reach switch management at 10.10.1.100 (TCP 80/443) exists but is kept disabled. It is only enabled during active lab work and disabled after.
+> **Note:** Rule #1 allows full gateway access (not just DNS) so pfSense UI is reachable from VLAN 10 during lab work. A temporary rule allowing VLAN 10 to reach switch management at 10.10.1.100 (TCP 80/443) also exists but is kept disabled - only enabled during active lab work.
 
 ---
 
