@@ -98,9 +98,9 @@ Homelab_Router-on-a-Stick/
 
 ---
 
-## Config Documentation
+## Documentation
 
-These aren't pfSense export files - they're written to explain the reasoning behind each rule, not just list settings.
+**Config breakdowns** - written to explain the reasoning, not just list settings:
 
 - [`firewall-rules.md`](configs/firewall-rules.md) - Per-VLAN rule chains, top-to-bottom order
 - [`nat-rules.md`](configs/nat-rules.md) - All 12 manual outbound NAT rules
@@ -108,11 +108,7 @@ These aren't pfSense export files - they're written to explain the reasoning beh
 - [`switch-port-map.md`](configs/switch-port-map.md) - GS308E port-by-port VLAN assignments
 - [`vpn-failover.md`](configs/vpn-failover.md) - WireGuard tunnel config and gateway group logic
 
----
-
-## Full Documentation
-
-Detailed PDF manuals with pfSense UI screenshots and step-by-step breakdowns live in [`/docs`](docs/):
+**Full PDF manuals** - detailed writeups with pfSense UI screenshots in [`/docs`](docs/):
 
 - [`HOME_LAB_v2.pdf`](docs/HOME_LAB_v2.pdf) - Full architecture writeup
 - [`FIREWALL_RULES_MANUAL.pdf`](docs/FIREWALL_RULES_MANUAL.pdf) - Firewall rules manual
