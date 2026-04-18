@@ -8,6 +8,8 @@ All notable changes to this project are documented here.
 
 ### Done
 - Tailscale remote access - advertised routes for `10.10.1.0/24` and `10.10.10.0/24` configured and tested (March 2026)
+- Suricata IDS deployed on pfSense 2.8.1
+- pfBlockerNG-devel deployed for IP/DNS blocking
 
 ### Fixed
 - GS308E static DHCP moved from VLAN10 (wrong tab, wrong subnet) to LAN at `10.10.1.100`
@@ -24,7 +26,6 @@ All notable changes to this project are documented here.
 - Renamed "Reserved For" column to "Purpose" in physical ports table
 
 ### Exploring
-- Suricata IDS / pfBlockerNG - evaluating options for alert-only monitoring on WAN and user VLANs
 - Centralized logging - syslog server for firewall and IDS alerts
 
 ### On Hold
