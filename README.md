@@ -133,7 +133,7 @@ Homelab_Router-on-a-Stick/
 | Item | Status | Notes |
 |---|---|---|
 | Tailscale remote access | Done | Advertised routes configured and tested - March 2026 |
-| Suricata IDS | Exploring | Evaluating pfBlockerNG as an alternative - Suricata limited to HTTP traffic only |
+| Suricata IDS | Done | Deployed on pfSense 2.8.1 alongside pfBlockerNG-devel |
 | AP hardware upgrade | On hold | Not planned right now - may revisit later with a VLAN-aware AP |
 | Guest rate limiting | On hold | Deferred - R6400 hardware doesn't support VLAN-aware SSIDs |
 | Centralized logging | Exploring | Syslog server for firewall and IDS alerts |
