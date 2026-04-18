@@ -57,6 +57,16 @@ All notable changes to this project are documented here.
 
 ---
 
+## [Phase 0] - 2024 Origins
+
+### Added
+- Early 2024 - Acquired Protectli FW6E, initial pfSense install with basic WAN/LAN configuration
+- Later 2024 - First Mullvad WireGuard tunnel (Chicago), started learning VPN enforcement and outbound traffic policy
+- Through 2025 - Added DNS and DoH blocking, built up early kill switch rules incrementally
+- Late 2025 to early 2026 - Dual tunnel failover, expanded to 6 VLAN segmentation, Tailscale remote access, Suricata and pfBlockerNG-devel deployment
+
+---
+
 ## [Phase 1] - Early 2026
 
 ### Added
