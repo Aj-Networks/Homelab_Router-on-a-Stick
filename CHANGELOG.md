@@ -10,6 +10,7 @@ All notable changes to this project are documented here.
 - Tailscale remote access - advertised routes for `10.10.1.0/24` and `10.10.10.0/24` configured and tested (March 2026)
 - Suricata IDS deployed on pfSense 2.8.1
 - pfBlockerNG-devel deployed for IP/DNS blocking
+- pfBlockerNG DNSBL VIP activated on 10.10.99.1/32 Localhost (April 2026). Network wide ad and tracker DNS blocking now active on VLAN10_USERS, VLAN20_IOT, VLAN30_GUEST, and VLAN50_MGMT. Blocked lookups resolve to the VIP and serve the pfBlockerNG block page.
 
 ### Fixed
 - GS308E static DHCP moved from VLAN10 (wrong tab, wrong subnet) to LAN at `10.10.1.100`
