@@ -49,3 +49,15 @@ Interface, subnet, and purpose map for the Router-on-a-Stick topology. All VLANs
 |---|---|---|---|
 | Netgear GS308E (Switch) | - | 10.10.1.100 | VLAN 1 |
 | Netgear R6400 (AP) | - | 10.10.10.254 | VLAN 10 |
+
+---
+
+## Virtual IPs
+
+Loopback service addresses. Not tied to any VLAN or physical interface. Used for internal services that need a reachable IP.
+
+| Address | Interface | Purpose |
+|---|---|---|
+| 10.10.99.1/32 | Localhost | pfBlockerNG DNSBL sinkhole VIP |
+
+> **Note:** 10.10.99.1 is a loopback IP Alias on the Localhost interface. It is not a VLAN gateway. Blocked DNS queries resolve to this address, and pfBlockerNG serves the block page from it over ports 80 and 443. The 10.10.99.0/24 range was chosen because it does not overlap with any existing VLAN (1, 10, 20, 30, 40, 50) or the Tailscale advertised routes (10.10.1.0/24 and 10.10.10.0/24).
