@@ -99,6 +99,12 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 ---
 
+## Auto-Generated Rules
+
+pfBlockerNG automatically creates floating permit rules allowing VLAN10_USERS, VLAN20_IOT, VLAN30_GUEST, and VLAN50_MGMT to reach the DNSBL VIP at 10.10.99.1 on ICMP and webserver ports 80 and 443. This lets blocked DNS lookups render the pfBlockerNG block page. VLAN40_LAB is excluded (isolated by design). WireGuard VPN interfaces and LAN are excluded (not client facing).
+
+---
+
 ## Key Design Decisions
 
 - **DNS is locked to pfSense** - clients cannot query external resolvers directly
