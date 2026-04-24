@@ -23,15 +23,17 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Pass | any | VLAN10 net | 10.10.10.1 | any | Allow access to pfSense gateway |
-| 2 | Pass | TCP | VLAN10 net | 10.10.20.5 | 9100 | Allow printing to printer |
-| 3 | Block | TCP/UDP | VLAN10 net | DOH_IPS alias | 443-853 | Block DNS-over-HTTPS / DoT |
-| 4 | Block | TCP/UDP | VLAN10 net | any | 53 | Block plain DNS to WAN |
-| 5 | Block | any | VLAN10 net | RFC1918 alias | any | Block inter-VLAN traffic |
-| 6 | Pass | any | VLAN10 net | any | any | Route via VPN_FAILOVER gateway |
-| 7 | Block | IPv6 | any | any | any | Drop all IPv6 |
+| 1 | Pass | UDP | VLAN10 net | 10.10.10.1 | 53 | DNS to pfSense resolver |
+| 2 | Pass | TCP | VLAN10 net | 10.10.10.1 | 443 | pfSense WebUI (HTTPS only) |
+| 3 | Pass | ICMP | VLAN10 net | 10.10.10.1 | - | Gateway reachability (ping) |
+| 4 | Pass | TCP | VLAN10 net | 10.10.20.5 | 9100 | Allow printing to printer |
+| 5 | Block | TCP/UDP | VLAN10 net | DOH_IPS alias | 443-853 | Block DNS-over-HTTPS / DoT |
+| 6 | Block | TCP/UDP | VLAN10 net | any | 53 | Block plain DNS to WAN |
+| 7 | Block | any | VLAN10 net | RFC1918 alias | any | Block inter-VLAN traffic |
+| 8 | Pass | any | VLAN10 net | any | any | Route via VPN_FAILOVER gateway |
+| 9 | Block | IPv6 | any | any | any | Drop all IPv6 |
 
-> **Note:** Rule #1 allows full gateway access (not just DNS) so pfSense UI is reachable from VLAN 10 during lab work. A temporary rule allowing VLAN 10 to reach switch management at 10.10.1.100 (TCP 80/443) also exists but is kept disabled - only enabled during active lab work.
+> **Note:** Gateway access is scoped to three specific services instead of blanket `any`: DNS (rule #1), WebUI (rule #2), and ICMP for ping (rule #3). SSH, API, and other pfSense services are no longer reachable from VLAN 10 - use VLAN 50 management for those. A temporary rule allowing VLAN 10 to reach switch management at 10.10.1.100 (TCP 80/443) also exists but is kept disabled - only enabled during active lab work.
 
 ---
 
