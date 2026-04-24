@@ -137,6 +137,7 @@ Homelab_Router-on-a-Stick/
 | AP hardware upgrade | On hold | Not planned right now - may revisit later with a VLAN-aware AP |
 | Guest rate limiting | On hold | Deferred - R6400 hardware doesn't support VLAN-aware SSIDs |
 | Centralized logging | Exploring | Syslog server for firewall and IDS alerts |
+| Switch port hardening | Planned | Move unused GS308E ports off VLAN 1 native into a dead VLAN |
 
 ---
 
