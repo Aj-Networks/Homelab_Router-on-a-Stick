@@ -82,13 +82,16 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Pass | any | VLAN50 net | 10.10.50.1 | any | Allow access to pfSense gateway |
-| 2 | Block | TCP/UDP | VLAN50 net | any | 53 | Block plain DNS to WAN |
-| 3 | Block | TCP/UDP | VLAN50 net | DOH_IPS alias | 443-853 | Block DoH / DoT |
-| 4 | Pass | any | VLAN50 net | any | any | Direct internet - no VPN |
-| 5 | Block | IPv6 | VLAN50 net | any | any | Drop all IPv6 |
+| 1 | Pass | UDP | VLAN50 net | 10.10.50.1 | 53 | DNS to pfSense resolver |
+| 2 | Pass | TCP | VLAN50 net | 10.10.50.1 | 443 | pfSense WebUI (HTTPS only) |
+| 3 | Pass | TCP | VLAN50 net | 10.10.50.1 | 22 | SSH to pfSense shell |
+| 4 | Pass | ICMP | VLAN50 net | 10.10.50.1 | - | Gateway reachability (ping) |
+| 5 | Block | TCP/UDP | VLAN50 net | any | 53 | Block plain DNS to WAN |
+| 6 | Block | TCP/UDP | VLAN50 net | DOH_IPS alias | 443-853 | Block DoH / DoT |
+| 7 | Pass | any | VLAN50 net | any | any | Direct internet - no VPN, full VLAN reach |
+| 8 | Block | IPv6 | VLAN50 net | any | any | Drop all IPv6 |
 
-> **Note:** VLAN 50 intentionally bypasses VPN and RFC1918 rules. It has direct WAN access and can reach all VLANs - this is for emergency admin access when something breaks.
+> **Note:** VLAN 50 intentionally bypasses VPN and RFC1918 rules via rule #7 - direct WAN access and can reach all VLANs, for emergency admin access when something breaks. Gateway access (rules #1-#4) is scoped to the four services actually used: DNS, WebUI, SSH, and ping. Unlike VLAN 10, SSH is included here because VLAN 50 is the designated shell-access VLAN.
 
 ---
 
