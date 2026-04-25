@@ -138,11 +138,13 @@ Record what reaches what; use this to drive the Tailscale ACL policy (see [tails
 ## 9. Suricata health
 
 ```
-Services > Suricata > Interfaces - confirm LAN, VLAN10, 20, 30, 50 are UP (VLAN 40 intentionally skipped)
+Services > Suricata > Interfaces - confirm WAN, VLAN10, 20, 30, 40, 50 are UP
 Services > Suricata > Alerts - alerts accumulating, not zero
 ```
 
 **Pass:** alert counter moves during normal browsing (should see at least a few policy-info alerts in a day).
+
+> **Note:** VLAN 40 runs in alert-only mode (Block Offenders off) until lab gear comes online and Cisco-protocol SIDs are added to a per-interface suppression list. Until then, expect zero VLAN 40 alerts.
 
 ---
 
