@@ -33,6 +33,49 @@ Chosen because it does not overlap any active VLAN (1, 10, 20, 30, 40, 50) or th
 
 ---
 
+## Active Feeds
+
+Groups are configured under `Firewall > pfBlockerNG > DNSBL > DNSBL Groups` and `Firewall > pfBlockerNG > IP > IPv4`.
+
+### DNSBL Groups (DNS-level blocking)
+
+| Group | Action | Frequency | Purpose |
+|---|---|---|---|
+| ADs_Basic | Unbound | Once a day | Core ad/tracker blocking |
+| ADs | Unbound | Once a day | Extended ad/tracker coverage |
+| Firebog_Suspicious | Unbound | Once a day | Suspicious domains (Firebog curated) |
+| Phishing | Unbound | Once a day | Phishing domains |
+| BBcan177 | Unbound | Once a day | Curated threat domains |
+| Malicious | Unbound | Once a day | Malware domains (D_Me_Malv, D_Me_Malw, MVPS, SWC) |
+
+### IPv4 Groups (IP-level blocking)
+
+| Group | Feeds enabled | Action | Purpose |
+|---|---|---|---|
+| PRI1_Spamhaus | Spamhaus_DROPv4, Spamhaus_EDROPv4 | Deny Both | Hijacked / unallocated netblocks |
+| PRI1_Botnet | Feodo_Tracker | Deny Both | Active botnet C2 IPs |
+| PRI1_ET | ET_Compromised | Deny Both | Emerging Threats compromised hosts |
+
+### GeoIP
+
+Currently disabled. Outbound is already tunneled via Mullvad VPN; inbound is blocked by default. Can be enabled later if regional inbound blocking becomes a need.
+
+---
+
+## Update Schedule
+
+Configured under `Firewall > pfBlockerNG > Update`.
+
+| Setting | Value |
+|---|---|
+| CRON | Daily at 03:00 |
+| Save | Enabled |
+| Force flag | Off (let CRON run) |
+
+After any feed/group change, force a manual reload from the `Update` tab: select `Reload`, mode `All`, click `Run`.
+
+---
+
 ## Permit Firewall Rules
 
 pfBlockerNG auto generates floating rules to let clients reach the VIP for the block page. Interfaces selected:
@@ -57,4 +100,4 @@ Confirmed working April 2026.
 - Bell icon notice cleared after Update, Force, Reload, DNSBL, Run.
 - nslookup doubleclick.net from a VLAN 10 client returned 10.10.99.1.
 - Browser rendered the pfBlockerNG block page.
-- Alert logged: Client 10.10.10.10, Type DNSBL, Group DNSBL_ADs_Basic, Feed StevenBlack_ADs.
+- Alert logged: Client 10.10.10.10, Type DNSBL, Group ADs_Basic.
