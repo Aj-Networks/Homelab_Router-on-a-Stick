@@ -112,6 +112,10 @@ Homelab_Router-on-a-Stick/
 - [`vpn-failover.md`](configs/vpn-failover.md) - WireGuard tunnel config and gateway group logic
 - [`tailscale.md`](configs/tailscale.md) - Tailscale subnet routes, ACL policy, and device tags
 
+**Educational deep-dive** - 29-section technical guide written for networking learners:
+
+- [`LAB_TECHNICAL_GUIDE.md`](docs/LAB_TECHNICAL_GUIDE.md) - What this lab is, who it is for, how every layer works, what was done well, what is limited, and a glossary of every acronym used
+
 **Full PDF manuals** - detailed writeups with pfSense UI screenshots in [`/docs`](docs/):
 
 - [`HOME_LAB_v2.pdf`](docs/HOME_LAB_v2.pdf) - Full architecture writeup
