@@ -110,6 +110,7 @@ Homelab_Router-on-a-Stick/
 - [`vlan-assignments.md`](configs/vlan-assignments.md) - Interface, subnet, and purpose map
 - [`switch-port-map.md`](configs/switch-port-map.md) - GS308E port-by-port VLAN assignments
 - [`vpn-failover.md`](configs/vpn-failover.md) - WireGuard tunnel config and gateway group logic
+- [`tailscale.md`](configs/tailscale.md) - Tailscale subnet routes, ACL policy, and device tags
 
 **Full PDF manuals** - detailed writeups with pfSense UI screenshots in [`/docs`](docs/):
 
@@ -132,7 +133,7 @@ Homelab_Router-on-a-Stick/
 
 | Item | Status | Notes |
 |---|---|---|
-| Tailscale remote access | Done | Advertised routes configured and tested - March 2026 |
+| Tailscale remote access | Done | Subnet locked to VLAN 10, tag-based ACL with default-deny - April 2026 |
 | Suricata IDS | Done | Deployed on pfSense 2.8.1 alongside pfBlockerNG-devel |
 | AP hardware upgrade | On hold | Not planned right now - may revisit later with a VLAN-aware AP |
 | Guest rate limiting | On hold | Deferred - R6400 hardware doesn't support VLAN-aware SSIDs |
