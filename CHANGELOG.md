@@ -11,6 +11,13 @@ All notable changes to this project are documented here.
 - Suricata IDS deployed on pfSense 2.8.1
 - pfBlockerNG-devel deployed for IP/DNS blocking
 - pfBlockerNG DNSBL VIP activated on 10.10.99.1/32 Localhost (April 2026). Network wide ad and tracker DNS blocking now active on VLAN10_USERS, VLAN20_IOT, VLAN30_GUEST, and VLAN50_MGMT. Blocked lookups resolve to the VIP and serve the pfBlockerNG block page.
+- pfBlockerNG DNSBL groups expanded (April 2026): ADs_Basic, ADs, Firebog_Suspicious, Phishing, BBcan177, Malicious - all set to Unbound action and daily updates. Verified `nslookup doubleclick.net` returns the DNSBL VIP.
+- VLAN 10 firewall rule #1 narrowed (April 2026) from blanket `Pass any -> 10.10.10.1` to three scoped rules: UDP 53 (DNS), TCP 443 (WebUI), ICMP (gateway reachability).
+- VLAN 50 firewall rule #1 narrowed (April 2026) from blanket `Pass any -> 10.10.50.1` to four scoped rules: UDP 53, TCP 443, TCP 22 (SSH), ICMP. Rule #7 `Pass any -> any` retained for the escape-hatch workflow.
+- Tailscale ACLs locked down (April 2026): subnet approval reduced to `10.10.10.0/24` only, default-deny ACL with `tag:home` + `autogroup:admin` -> `10.10.10.0/24:*`, primary device tagged `tag:home`. VLAN 50 stays physical-only via switch port 8.
+- Suricata enabled on VLAN 40 (April 2026) in alert-only mode. Suppression list deferred until lab gear comes online and Cisco-protocol SIDs (CDP, STP, DTP) can be observed.
+- Backup procedure documented (April 2026) - pfSense XML export and GS308E config backup with age encryption (`configs/backup-procedure.md`).
+- Repeatable testing procedures documented (April 2026) - VLAN isolation matrix, DNSBL verify, kill-switch drill, failover drill, leak tests (`configs/testing-procedures.md`).
 
 ### Fixed
 - GS308E static DHCP moved from VLAN10 (wrong tab, wrong subnet) to LAN at `10.10.1.100`

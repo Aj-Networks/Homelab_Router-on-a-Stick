@@ -147,8 +147,8 @@ Homelab_Router-on-a-Stick/
 **Guest Wi-Fi isn't fully separated yet.**
 The R6400 can't do 802.1Q tagging, so the guest SSID lands on VLAN 10 with trusted devices. AP-level client isolation is enabled, but that's not the same as real VLAN separation. This is the biggest gap right now.
 
-**VLAN 40 is noisy.**
-Cisco lab gear throws a lot of protocol traffic (CDP, STP, etc.). VLAN 40 is excluded from Suricata monitoring to avoid alert floods. It's still fully isolated by firewall rules.
+**VLAN 40 is noisy when active.**
+Cisco lab gear throws a lot of protocol traffic (CDP, STP, etc.). Suricata is now enabled on VLAN 40 in alert-only mode. Lab gear is currently powered down so no tuning is needed yet — when lab work resumes, observed Cisco-protocol SIDs will be added to a suppression list scoped to VLAN 40. VLAN 40 remains fully isolated by firewall rules either way.
 
 **What's not in this repo.**
 WireGuard private keys and switch binary configs stay local. The markdown files in `configs/` are the sanitized, shareable versions. Some real IPs show up in diagrams and docs - that's intentional for a homelab, but no credentials are committed here.
