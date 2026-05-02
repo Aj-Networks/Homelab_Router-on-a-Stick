@@ -111,6 +111,7 @@ Homelab_Router-on-a-Stick/
 - [`switch-port-map.md`](configs/switch-port-map.md) - GS308E port-by-port VLAN assignments
 - [`vpn-failover.md`](configs/vpn-failover.md) - WireGuard tunnel config and gateway group logic
 - [`tailscale.md`](configs/tailscale.md) - Tailscale subnet routes, ACL policy, and device tags
+- [`ccna-lab.md`](configs/ccna-lab.md) - Cisco 3560 + 1900 CCNA lab plan, IP scheme, phase progression
 
 **Educational deep-dive** - 29-section technical guide written for networking learners:
 
