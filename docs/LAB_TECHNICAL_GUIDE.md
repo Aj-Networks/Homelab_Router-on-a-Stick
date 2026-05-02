@@ -1,4 +1,4 @@
-# Homelab Technical Guide — Router-on-a-Stick with VLAN Segmentation, Dual-VPN Failover, and Layered Kill Switch
+# Homelab Technical Guide, Router-on-a-Stick with VLAN Segmentation, Dual-VPN Failover, and Layered Kill Switch
 
 **A comprehensive educational walkthrough of a small-scale network lab, written for technical readers who know networking basics and want to see how the pieces fit together in practice.**
 
@@ -11,27 +11,27 @@
 3. [Target Audience](#3-target-audience)
 4. [Architectural Overview](#4-architectural-overview)
 5. [Hardware Inventory](#5-hardware-inventory)
-6. [Network Topology — Router-on-a-Stick](#6-network-topology--router-on-a-stick)
-7. [VLAN Architecture — IEEE 802.1Q](#7-vlan-architecture--ieee-8021q)
+6. [Network Topology, Router-on-a-Stick](#6-network-topology--router-on-a-stick)
+7. [VLAN Architecture, IEEE 802.1Q](#7-vlan-architecture--ieee-8021q)
 8. [IP Addressing Plan](#8-ip-addressing-plan)
 9. [Switching and Trunking](#9-switching-and-trunking)
-10. [DHCP — Dynamic Host Configuration Protocol](#10-dhcp--dynamic-host-configuration-protocol)
+10. [DHCP, Dynamic Host Configuration Protocol](#10-dhcp--dynamic-host-configuration-protocol)
 11. [DNS Architecture](#11-dns-architecture)
 12. [Firewall Philosophy](#12-firewall-philosophy)
-13. [Per-VLAN Firewall Rules — Line by Line](#13-per-vlan-firewall-rules--line-by-line)
-14. [NAT — Network Address Translation](#14-nat--network-address-translation)
-15. [VPN Architecture — WireGuard with Failover](#15-vpn-architecture--wireguard-with-failover)
-16. [Kill Switch — The Five Layers](#16-kill-switch--the-five-layers)
+13. [Per-VLAN Firewall Rules, Line by Line](#13-per-vlan-firewall-rules--line-by-line)
+14. [NAT, Network Address Translation](#14-nat--network-address-translation)
+15. [VPN Architecture, WireGuard with Failover](#15-vpn-architecture--wireguard-with-failover)
+16. [Kill Switch, The Five Layers](#16-kill-switch--the-five-layers)
 17. [DNS Filtering with pfBlockerNG](#17-dns-filtering-with-pfblockerng)
-18. [Intrusion Detection — Suricata](#18-intrusion-detection--suricata)
-19. [Remote Access — Tailscale](#19-remote-access--tailscale)
+18. [Intrusion Detection, Suricata](#18-intrusion-detection--suricata)
+19. [Remote Access, Tailscale](#19-remote-access--tailscale)
 20. [Backup and Restore](#20-backup-and-restore)
 21. [Testing and Verification](#21-testing-and-verification)
 22. [Threat Model](#22-threat-model)
 23. [Defense in Depth](#23-defense-in-depth)
 24. [What Was Done Well](#24-what-was-done-well)
 25. [Trade-offs and Limitations](#25-trade-offs-and-limitations)
-26. [What We Chose Not To Do — and Why](#26-what-we-chose-not-to-do--and-why)
+26. [What We Chose Not To Do, and Why](#26-what-we-chose-not-to-do--and-why)
 27. [Roadmap](#27-roadmap)
 28. [Glossary](#28-glossary)
 29. [References and Further Reading](#29-references-and-further-reading)
@@ -65,7 +65,7 @@ The lab began in 2024 with a Protectli FW6E mini-PC, a fresh pfSense install, an
 | Learn networking fundamentals hands-on | Build, break, fix, document |
 | Achieve real (not theatrical) privacy | All client traffic egresses through Mullvad VPN; no ISP DNS fallback |
 | Hard isolation between trust zones | VLANs + per-interface firewall rules + RFC 1918 inter-VLAN block |
-| Prevent leaks if anything fails | Five-layer kill switch — manual NAT, DoH/DoT block, port 53 block, RFC 1918 block, IPv6 block |
+| Prevent leaks if anything fails | Five-layer kill switch, manual NAT, DoH/DoT block, port 53 block, RFC 1918 block, IPv6 block |
 | Reproducibility | Markdown docs in `/configs` describe every rule and choice |
 
 ### 2.3 Non-goals
@@ -128,7 +128,7 @@ Not required:
                 |  Trunk  (igb1, 802.1Q)
                 v
 +--------------------------------------------------------------+
-|  Netgear GS308E v4 — managed L2 switch                        |
+|  Netgear GS308E v4, managed L2 switch                        |
 |  Ports 2–8 distribute access to VLANs 10, 20, 40, 50          |
 +--------------------------------------------------------------+
         |          |         |         |         |
@@ -142,7 +142,7 @@ Not required:
 |---|---|---|
 | **Layer 2 isolation** | Tags frames per VLAN so devices on different VLANs cannot share a broadcast domain | GS308E + pfSense `igb1.X` sub-interfaces |
 | **Layer 3 firewalling** | Stateful per-interface rules; default deny inbound, scoped allows outbound | pfSense `pf` |
-| **Egress control** | Manual outbound NAT only on VPN tunnels — no NAT on the WAN interface | pfSense NAT > Outbound |
+| **Egress control** | Manual outbound NAT only on VPN tunnels, no NAT on the WAN interface | pfSense NAT > Outbound |
 | **Threat filtering** | DNSBL sinkholes + IPv4 deny lists + IDS pattern matching | pfBlockerNG + Suricata |
 
 Each plane operates independently. A failure in one (e.g., a misconfigured firewall rule) does not collapse the others (the kill switch still holds because NAT and DNS lock-in are separate).
@@ -153,20 +153,20 @@ Each plane operates independently. A failure in one (e.g., a misconfigured firew
 
 | Device | Role | Notes |
 |---|---|---|
-| **Protectli FW6E** (Intel i7, 16 GB Random Access Memory (RAM), 6× Intel `igb` Network Interface Card (NIC)) | Firewall / Router | Runs pfSense 2.8.1. Six 1 GbE ports — only `igb0` (WAN) and `igb1` (trunk) are active; `igb2`–`igb5` are reserved for future use (Out-of-Band, Lab Direct, High Availability, Expansion). |
+| **Protectli FW6E** (Intel i7, 16 GB Random Access Memory (RAM), 6× Intel `igb` Network Interface Card (NIC)) | Firewall / Router | Runs pfSense 2.8.1. Six 1 GbE ports, only `igb0` (WAN) and `igb1` (trunk) are active; `igb2`-`igb5` are reserved for future use (Out-of-Band, Lab Direct, High Availability, Expansion). |
 | **Netgear GS308E v4** | Managed L2 switch | Supports IEEE 802.1Q VLAN tagging via the proprietary "ProSafe Plus" Windows utility. 8 ports. |
-| **Netgear R6400** | Wireless Access Point (AP) | Set to AP-only mode (routing disabled). Cannot do per-Service Set Identifier (SSID) VLAN tagging — see [§ 25](#25-trade-offs-and-limitations). |
+| **Netgear R6400** | Wireless Access Point (AP) | Set to AP-only mode (routing disabled). Cannot do per-Service Set Identifier (SSID) VLAN tagging, see [§ 25](#25-trade-offs-and-limitations). |
 | **Cisco Catalyst 3560** + **Cisco 1900** | Lab study gear | Powered down most of the time; isolated on VLAN 40 when active. |
 
 ### 5.1 Why this hardware
 
-- **Protectli FW6E** — passive cooling, FreeBSD-friendly Intel NICs, enough horsepower for Suricata and pfBlockerNG concurrent with WireGuard at 1 Gbps.
-- **GS308E** — cheapest reliable 802.1Q-capable switch at the time of build. Trade-off: no Simple Network Management Protocol (SNMP), no Secure Shell (SSH), config is binary.
-- **R6400** — already on hand. Known limitation: not VLAN-aware. See § 25 and § 27 for the upgrade plan.
+- **Protectli FW6E**, passive cooling, FreeBSD-friendly Intel NICs, enough horsepower for Suricata and pfBlockerNG concurrent with WireGuard at 1 Gbps.
+- **GS308E**, cheapest reliable 802.1Q-capable switch at the time of build. Trade-off: no Simple Network Management Protocol (SNMP), no Secure Shell (SSH), config is binary.
+- **R6400**, already on hand. Known limitation: not VLAN-aware. See § 25 and § 27 for the upgrade plan.
 
 ---
 
-## 6. Network Topology — Router-on-a-Stick
+## 6. Network Topology, Router-on-a-Stick
 
 ### 6.1 What is Router-on-a-Stick?
 
@@ -194,7 +194,7 @@ A **Router-on-a-Stick** is a topology in which one physical interface on the rou
 |---|---|
 | **Simpler cabling** | One Ethernet cable from firewall to switch carries all VLANs |
 | **Cheaper hardware** | No need for a 6-port firewall to back 6 VLANs |
-| **Pedagogically clean** | Forces you to understand 802.1Q tagging — there's no shortcut |
+| **Pedagogically clean** | Forces you to understand 802.1Q tagging, there's no shortcut |
 | **Flexibility** | Add a VLAN by editing the switch and adding `igb1.X` on the router; no rewiring |
 
 ### 6.3 Trade-offs
@@ -205,7 +205,7 @@ A **Router-on-a-Stick** is a topology in which one physical interface on the rou
 
 ---
 
-## 7. VLAN Architecture — IEEE 802.1Q
+## 7. VLAN Architecture, IEEE 802.1Q
 
 ### 7.1 What is a VLAN?
 
@@ -227,8 +227,8 @@ A frame carrying a VLAN tag looks like:
 
 A switch port can be:
 
-- **Access** — the device on this port has no idea about VLANs; the switch tags incoming frames with the port's Port VLAN ID (PVID) and strips tags before sending out
-- **Trunk** — the device on this port understands tags; the switch passes tagged frames in both directions
+- **Access**, the device on this port has no idea about VLANs; the switch tags incoming frames with the port's Port VLAN ID (PVID) and strips tags before sending out
+- **Trunk**, the device on this port understands tags; the switch passes tagged frames in both directions
 
 ### 7.2 VLANs in this lab
 
@@ -236,16 +236,16 @@ A switch port can be:
 |---|---|---|---|
 | 1 (native) | LAN_NATIVE | Trunk native, used for switch management at `10.10.1.100` | Medium |
 | 10 | VLAN10_USERS | PCs, phones, Wi-Fi for trusted devices | High |
-| 20 | VLAN20_IOT | Internet of Things (IoT) — printer, smart devices | Low |
-| 30 | VLAN30_GUEST | Guest Wi-Fi (currently shares VLAN 10 — see § 25) | Lowest |
+| 20 | VLAN20_IOT | Internet of Things (IoT), printer, smart devices | Low |
+| 30 | VLAN30_GUEST | Guest Wi-Fi (currently shares VLAN 10, see § 25) | Lowest |
 | 40 | VLAN40_LAB | Cisco study gear, fully isolated | Quarantine |
-| 50 | VLAN50_MGMT | Management escape-hatch — direct WAN access | Privileged |
+| 50 | VLAN50_MGMT | Management escape-hatch, direct WAN access | Privileged |
 
 ### 7.3 Why this VLAN scheme
 
-- **Trust hierarchy** — VLANs are arranged from "trusted users" to "untrusted IoT/guest" to "isolated lab", with management as a separate privileged plane.
-- **Minimum number of VLANs that does the job** — splitting further (e.g., separate VLAN per IoT category) adds operational overhead with little incremental benefit at home scale.
-- **Numeric mnemonic** — the third octet of every subnet matches the VLAN ID (`10.10.20.x` ↔ VLAN 20). This makes packet-capture log review faster.
+- **Trust hierarchy**, VLANs are arranged from "trusted users" to "untrusted IoT/guest" to "isolated lab", with management as a separate privileged plane.
+- **Minimum number of VLANs that does the job**, splitting further (e.g., separate VLAN per IoT category) adds operational overhead with little incremental benefit at home scale.
+- **Numeric mnemonic**, the third octet of every subnet matches the VLAN ID (`10.10.20.x` ↔ VLAN 20). This makes packet-capture log review faster.
 
 ---
 
@@ -259,20 +259,20 @@ All internal subnets are drawn from **RFC 1918** ("Address Allocation for Privat
 
 | VLAN | Subnet (CIDR) | Network address | Broadcast | Usable | Gateway |
 |---|---|---|---|---|---|
-| 1 | `10.10.1.0/24` | 10.10.1.0 | 10.10.1.255 | 10.10.1.1 – .254 | 10.10.1.1 |
-| 10 | `10.10.10.0/24` | 10.10.10.0 | 10.10.10.255 | 10.10.10.1 – .254 | 10.10.10.1 |
-| 20 | `10.10.20.0/24` | 10.10.20.0 | 10.10.20.255 | 10.10.20.1 – .254 | 10.10.20.1 |
-| 30 | `10.10.30.0/24` | 10.10.30.0 | 10.10.30.255 | 10.10.30.1 – .254 | 10.10.30.1 |
-| 40 | `10.10.40.0/24` | 10.10.40.0 | 10.10.40.255 | 10.10.40.1 – .254 | 10.10.40.1 |
-| 50 | `10.10.50.0/24` | 10.10.50.0 | 10.10.50.255 | 10.10.50.1 – .254 | 10.10.50.1 |
+| 1 | `10.10.1.0/24` | 10.10.1.0 | 10.10.1.255 | 10.10.1.1, .254 | 10.10.1.1 |
+| 10 | `10.10.10.0/24` | 10.10.10.0 | 10.10.10.255 | 10.10.10.1, .254 | 10.10.10.1 |
+| 20 | `10.10.20.0/24` | 10.10.20.0 | 10.10.20.255 | 10.10.20.1, .254 | 10.10.20.1 |
+| 30 | `10.10.30.0/24` | 10.10.30.0 | 10.10.30.255 | 10.10.30.1, .254 | 10.10.30.1 |
+| 40 | `10.10.40.0/24` | 10.10.40.0 | 10.10.40.255 | 10.10.40.1, .254 | 10.10.40.1 |
+| 50 | `10.10.50.0/24` | 10.10.50.0 | 10.10.50.255 | 10.10.50.1, .254 | 10.10.50.1 |
 
 ### 8.3 Why `/24`?
 
-- 254 usable hosts per VLAN — far more than needed today, but cheap to allocate.
+- 254 usable hosts per VLAN, far more than needed today, but cheap to allocate.
 - Every subnet shares an identical netmask (255.255.255.0), simplifying mental arithmetic.
 - Easy migration path if a VLAN ever needs to be split or VLSM (Variable-Length Subnet Masking) is introduced later.
 
-### 8.4 Special address — the DNSBL Virtual IP
+### 8.4 Special address, the DNSBL Virtual IP
 
 `10.10.99.1/32` is a **Virtual IP (VIP)** mounted on the pfSense `Localhost` interface. It is **not** a VLAN gateway, not on any physical interface, and not routable from outside pfSense. It serves the pfBlockerNG block page when a domain is sinkholed. The `/32` mask says "exactly one host, no subnet."
 
@@ -287,17 +287,17 @@ All internal subnets are drawn from **RFC 1918** ("Address Allocation for Privat
 | Port | Mode | PVID (untagged) | Tagged VLANs | Connected device |
 |---|---|---|---|---|
 | 1 | Trunk | 1 | 10, 20, 30, 40, 50 | pfSense `igb1` (Port 2 on FW6E) |
-| 2 | Access | 10 | – | Trusted PC |
-| 3 | Access | 10 | – | Netgear R6400 AP |
-| 4 | Access | 20 | – | Network printer |
-| 5 | Access | 20 | – | Smart device |
-| 6 | Access | 40 | – | Cisco Catalyst 3560 |
-| 7 | Access | 40 | – | Cisco 1900 router |
-| 8 | Access | 50 | – | Management spare |
+| 2 | Access | 10 | n/a | Trusted PC |
+| 3 | Access | 10 | n/a | Netgear R6400 AP |
+| 4 | Access | 20 | n/a | Network printer |
+| 5 | Access | 20 | n/a | Smart device |
+| 6 | Access | 40 | n/a | Cisco Catalyst 3560 |
+| 7 | Access | 40 | n/a | Cisco 1900 router |
+| 8 | Access | 50 | n/a | Management spare |
 
 ### 9.2 What "PVID" means
 
-The **Port VLAN Identifier (PVID)** is the VLAN ID assigned to untagged frames arriving on an access port. When a PC plugs into Port 2 and sends a normal Ethernet frame, the switch stamps it with VLAN 10 before forwarding. On the way back out the access port, the tag is stripped — the PC never sees it.
+The **Port VLAN Identifier (PVID)** is the VLAN ID assigned to untagged frames arriving on an access port. When a PC plugs into Port 2 and sends a normal Ethernet frame, the switch stamps it with VLAN 10 before forwarding. On the way back out the access port, the tag is stripped, the PC never sees it.
 
 ### 9.3 Trunk-port behaviour
 
@@ -312,14 +312,14 @@ When pfSense receives a frame on `igb1`, it inspects the 802.1Q tag and forwards
 
 Port 8 is intentionally configured as the management escape-hatch. Plugging a laptop into Port 8 places it on VLAN 50, which has direct WAN egress and full inter-VLAN reach. The intent is:
 
-- **Routine workflow** — used for raw, non-VPN Internet access when the kill switch / VPN rules are in the way.
-- **Emergency administration** — reach the firewall and any VLAN to fix a broken rule.
+- **Routine workflow**, used for raw, non-VPN Internet access when the kill switch / VPN rules are in the way.
+- **Emergency administration**, reach the firewall and any VLAN to fix a broken rule.
 
 This is a deliberate trade-off: physical access to Port 8 = full network access. See § 25 for the limitation discussion.
 
 ---
 
-## 10. DHCP — Dynamic Host Configuration Protocol
+## 10. DHCP, Dynamic Host Configuration Protocol
 
 ### 10.1 Per-VLAN DHCP scopes
 
@@ -328,19 +328,19 @@ pfSense runs a **DHCP server** on each VLAN sub-interface. When a device boots, 
 - IP address from the configured pool
 - Subnet mask (`/24` everywhere)
 - Default gateway (the VLAN's `.1` address)
-- DNS server (the VLAN's `.1` address — pfSense Unbound)
+- DNS server (the VLAN's `.1` address, pfSense Unbound)
 - Lease time
 
 ### 10.2 Address pools
 
 | VLAN | DHCP range | Reserved |
 |---|---|---|
-| 1 | 10.10.1.10 – 10.10.1.99 | .1 (gateway), .100 (switch static) |
-| 10 | 10.10.10.10 – 10.10.10.245 | .254 (R6400 static), .246–.253 future static |
-| 20 | 10.10.20.10 – 10.10.20.254 | .1 |
-| 30 | 10.10.30.10 – 10.10.30.254 | .1 |
-| 40 | 10.10.40.10 – 10.10.40.254 | .1 |
-| 50 | 10.10.50.10 – 10.10.50.254 | .1 |
+| 1 | 10.10.1.10-10.10.1.99 | .1 (gateway), .100 (switch static) |
+| 10 | 10.10.10.10-10.10.10.245 | .254 (R6400 static), .246-.253 future static |
+| 20 | 10.10.20.10-10.10.20.254 | .1 |
+| 30 | 10.10.30.10-10.10.30.254 | .1 |
+| 40 | 10.10.40.10-10.10.40.254 | .1 |
+| 50 | 10.10.50.10-10.10.50.254 | .1 |
 
 ### 10.3 Static mappings
 
@@ -391,11 +391,11 @@ Running Unbound in resolver mode (rather than forwarder mode) means clients are 
 | Layer | Mechanism |
 |---|---|
 | Outbound on each VLAN | Firewall rule: `Block UDP 53` to anywhere except the VLAN gateway |
-| DoH/DoT block | Firewall rule: `Block` to `DOH_IPS` alias on TCP/UDP 443–853 |
-| pfSense system DNS | Configured as Mullvad addresses only — no ISP fallback |
-| Outbound NAT | Only the VPN tunnel interfaces have NAT rules — DNS queries cannot leave via WAN |
+| DoH/DoT block | Firewall rule: `Block` to `DOH_IPS` alias on TCP/UDP 443-853 |
+| pfSense system DNS | Configured as Mullvad addresses only, no ISP fallback |
+| Outbound NAT | Only the VPN tunnel interfaces have NAT rules, DNS queries cannot leave via WAN |
 
-**Net effect:** there is no possible code path by which a client query reaches the ISP DNS or any non-Mullvad resolver. If a client tries to bypass with `dig @8.8.8.8` it gets blocked by the port-53 rule. If it tries DoH (DNS-over-HTTPS) on `1.1.1.1:443` it gets blocked by the DoH alias rule. If pfSense fails over to NYC, system DNS swings to the NYC Mullvad address — still encrypted, still inside the tunnel.
+**Net effect:** there is no possible code path by which a client query reaches the ISP DNS or any non-Mullvad resolver. If a client tries to bypass with `dig @8.8.8.8` it gets blocked by the port-53 rule. If it tries DoH (DNS-over-HTTPS) on `1.1.1.1:443` it gets blocked by the DoH alias rule. If pfSense fails over to NYC, system DNS swings to the NYC Mullvad address, still encrypted, still inside the tunnel.
 
 ---
 
@@ -411,11 +411,11 @@ Once a rule passes a connection, `pf` adds an entry to the **state table**. Subs
 
 - You only need to write rules for the **initiating direction**.
 - Reply packets are matched by state, not by a separate rule.
-- The state table is what makes the firewall fast — most packets never re-evaluate the rule list.
+- The state table is what makes the firewall fast, most packets never re-evaluate the rule list.
 
 ### 12.3 Top-down evaluation, first match wins
 
-Rules are evaluated in order from top to bottom on the interface where traffic enters. The **first** rule whose criteria match decides the fate of the packet — `pass` or `block`. There is no "score" or "best match." Rule order matters.
+Rules are evaluated in order from top to bottom on the interface where traffic enters. The **first** rule whose criteria match decides the fate of the packet, `pass` or `block`. There is no "score" or "best match." Rule order matters.
 
 ### 12.4 The "RFC 1918 alias" trick
 
@@ -431,19 +431,19 @@ Every VLAN (except VLAN 1 native and VLAN 50) has a rule:
 Block any from VLANXX_net to RFC1918 alias
 ```
 
-This single rule blocks every possible inter-VLAN destination because every VLAN sits inside `10.0.0.0/8`. New VLANs are isolated by default — no rule edits needed when one is added.
+This single rule blocks every possible inter-VLAN destination because every VLAN sits inside `10.0.0.0/8`. New VLANs are isolated by default, no rule edits needed when one is added.
 
 ---
 
-## 13. Per-VLAN Firewall Rules — Line by Line
+## 13. Per-VLAN Firewall Rules, Line by Line
 
 This section walks through each VLAN's rules. Each rule's purpose is explained below the table.
 
-### 13.1 LAN — Native (10.10.1.0/24)
+### 13.1 LAN, Native (10.10.1.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Block | TCP/UDP | LAN net | DOH_IPS alias | 443–853 | Block DoH / DoT |
+| 1 | Block | TCP/UDP | LAN net | DOH_IPS alias | 443-853 | Block DoH / DoT |
 | 2 | Block | TCP/UDP | LAN net | any | 53 | Block plain DNS to WAN |
 | 3 | Pass | TCP | LAN net | MSFT_CONNECTIVITY alias | 443 | Microsoft connectivity check |
 | 4 | Pass | any | LAN net | LAN net | any | Allow local |
@@ -452,32 +452,32 @@ This section walks through each VLAN's rules. Each rule's purpose is explained b
 
 LAN (VLAN 1) is the trunk's native VLAN and is intentionally less restricted because the switch's management interface lives here. Cross-VLAN reach is allowed by design. Microsoft's Network Connectivity Status Indicator (NCSI) check (rule 3) is whitelisted via WAN so Windows does not show "no internet" when on VPN.
 
-### 13.2 VLAN 10 — Users (10.10.10.0/24)
+### 13.2 VLAN 10, Users (10.10.10.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
 | 1 | Pass | UDP | VLAN10 net | 10.10.10.1 | 53 | DNS to pfSense resolver |
 | 2 | Pass | TCP | VLAN10 net | 10.10.10.1 | 443 | pfSense WebUI (HTTPS only) |
-| 3 | Pass | ICMP | VLAN10 net | 10.10.10.1 | – | Ping the gateway |
+| 3 | Pass | ICMP | VLAN10 net | 10.10.10.1 | n/a | Ping the gateway |
 | 4 | Pass | TCP | VLAN10 net | 10.10.20.5 | 9100 | Allow printing to printer (RAW print) |
-| 5 | Block | TCP/UDP | VLAN10 net | DOH_IPS alias | 443–853 | Block DoH / DoT |
+| 5 | Block | TCP/UDP | VLAN10 net | DOH_IPS alias | 443-853 | Block DoH / DoT |
 | 6 | Block | TCP/UDP | VLAN10 net | any | 53 | Block plain DNS to WAN |
 | 7 | Block | any | VLAN10 net | RFC1918 alias | any | Block inter-VLAN traffic |
 | 8 | Pass | any | VLAN10 net | any | any | Egress via VPN_FAILOVER |
 | 9 | Block | IPv6 | any | any | any | Drop IPv6 |
 
-Rule 1–3: **scoped gateway access** — VLAN 10 hosts can resolve DNS, reach the WebUI, and ping the gateway. SSH and other admin services are not exposed from VLAN 10.
-Rule 4: **explicit pinhole** for printing — TCP 9100 is the standard RAW Printing protocol port.
-Rules 5–7: kill-switch and isolation enforcement.
+Rules 1-3: **scoped gateway access**, VLAN 10 hosts can resolve DNS, reach the WebUI, and ping the gateway. SSH and other admin services are not exposed from VLAN 10.
+Rule 4: **explicit pinhole** for printing, TCP 9100 is the standard RAW Printing protocol port.
+Rules 5-7: kill-switch and isolation enforcement.
 Rule 8: the **default egress** through the VPN failover gateway group.
 Rule 9: IPv6 dropped to eliminate dual-stack leak vectors.
 
-### 13.3 VLAN 20 — IoT (10.10.20.0/24)
+### 13.3 VLAN 20, IoT (10.10.20.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
 | 1 | Pass | UDP | VLAN20 net | 10.10.20.1 | 53 | DNS only |
-| 2 | Block | TCP/UDP | VLAN20 net | DOH_IPS alias | 443–853 | Block DoH / DoT |
+| 2 | Block | TCP/UDP | VLAN20 net | DOH_IPS alias | 443-853 | Block DoH / DoT |
 | 3 | Block | TCP/UDP | VLAN20 net | any | 53 | Block plain DNS to WAN |
 | 4 | Block | any | VLAN20 net | RFC1918 alias | any | Block inter-VLAN |
 | 5 | Pass | any | VLAN20 net | any | any | Egress via VPN_FAILOVER |
@@ -485,24 +485,24 @@ Rule 9: IPv6 dropped to eliminate dual-stack leak vectors.
 
 IoT devices are the **lowest-trust** category. They get DNS to the gateway and outbound Internet via the VPN, nothing else. They cannot reach the WebUI or any other VLAN.
 
-### 13.4 VLAN 30 — Guest (10.10.30.0/24)
+### 13.4 VLAN 30, Guest (10.10.30.0/24)
 
-Same shape as VLAN 20 — DNS only to gateway, no inter-VLAN, egress via VPN. Identical rule structure because guest devices are treated as IoT-equivalent: Internet access only.
+Same shape as VLAN 20, DNS only to gateway, no inter-VLAN, egress via VPN. Identical rule structure because guest devices are treated as IoT-equivalent: Internet access only.
 
-### 13.5 VLAN 40 — Lab (10.10.40.0/24)
+### 13.5 VLAN 40, Lab (10.10.40.0/24)
 
-Same shape as VLAN 20. Lab gear is treated as untrusted by default. Excluded from Suricata only when actively generating Cisco protocol noise (Cisco Discovery Protocol (CDP), Spanning Tree Protocol (STP), Dynamic Trunking Protocol (DTP)) — currently runs in alert-only mode awaiting traffic-driven SID tuning.
+Same shape as VLAN 20. Lab gear is treated as untrusted by default. Excluded from Suricata only when actively generating Cisco protocol noise (Cisco Discovery Protocol (CDP), Spanning Tree Protocol (STP), Dynamic Trunking Protocol (DTP)), currently runs in alert-only mode awaiting traffic-driven SID tuning.
 
-### 13.6 VLAN 50 — Management (10.10.50.0/24)
+### 13.6 VLAN 50, Management (10.10.50.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
 | 1 | Pass | UDP | VLAN50 net | 10.10.50.1 | 53 | DNS |
 | 2 | Pass | TCP | VLAN50 net | 10.10.50.1 | 443 | WebUI |
 | 3 | Pass | TCP | VLAN50 net | 10.10.50.1 | 22 | SSH |
-| 4 | Pass | ICMP | VLAN50 net | 10.10.50.1 | – | Ping |
+| 4 | Pass | ICMP | VLAN50 net | 10.10.50.1 | n/a | Ping |
 | 5 | Block | TCP/UDP | VLAN50 net | any | 53 | Block plain DNS to WAN |
-| 6 | Block | TCP/UDP | VLAN50 net | DOH_IPS alias | 443–853 | Block DoH / DoT |
+| 6 | Block | TCP/UDP | VLAN50 net | DOH_IPS alias | 443-853 | Block DoH / DoT |
 | 7 | Pass | any | VLAN50 net | any | any | Direct egress + full inter-VLAN |
 | 8 | Block | IPv6 | VLAN50 net | any | any | Drop IPv6 |
 
@@ -510,7 +510,7 @@ Rule 7 is the **escape hatch**. VLAN 50 bypasses both the VPN and the inter-VLAN
 
 ---
 
-## 14. NAT — Network Address Translation
+## 14. NAT, Network Address Translation
 
 ### 14.1 What NAT does
 
@@ -552,7 +552,7 @@ The VLAN 50 NAT rules (6 and 12) never actually match in practice because VLAN 5
 
 ---
 
-## 15. VPN Architecture — WireGuard with Failover
+## 15. VPN Architecture, WireGuard with Failover
 
 ### 15.1 What is WireGuard?
 
@@ -560,8 +560,8 @@ The VLAN 50 NAT rules (6 and 12) never actually match in practice because VLAN 5
 
 - **Small codebase** (~4,000 lines vs. OpenVPN's hundreds of thousands)
 - **In-kernel** Linux/BSD implementation → high throughput, low latency
-- **Cryptokey routing** — peer identity is the public key; no Public Key Infrastructure (PKI) ceremony
-- **Stateless / no session negotiation** — clients re-establish silently after reboot
+- **Cryptokey routing**, peer identity is the public key; no Public Key Infrastructure (PKI) ceremony
+- **Stateless / no session negotiation**, clients re-establish silently after reboot
 
 Each WireGuard tunnel is a User Datagram Protocol (UDP) flow between two endpoints, encrypted with the **Noise Protocol Framework** primitives (Curve25519, ChaCha20, Poly1305, BLAKE2s).
 
@@ -574,7 +574,7 @@ Each WireGuard tunnel is a User Datagram Protocol (UDP) flow between two endpoin
 
 Each tunnel has its own pfSense interface (`tun_wgX`) and gateway (`GW_VPN_CHI`, `GW_VPN_NYC`).
 
-### 15.3 The gateway group — `VPN_FAILOVER`
+### 15.3 The gateway group, `VPN_FAILOVER`
 
 A **gateway group** is a pfSense construct that bundles multiple gateways with a tier ordering and a triggering policy.
 
@@ -589,7 +589,7 @@ Gateway health is monitored by pfSense via Internet Control Message Protocol (IC
 
 Every per-VLAN egress rule (Rule 8 on VLAN 10, Rule 7 on VLAN 50, etc.) sets the gateway to **VPN_FAILOVER**, not to a specific tunnel. This way:
 
-- Failover is automatic — no rule edits, no state flush
+- Failover is automatic, no rule edits, no state flush
 - The gateway abstraction insulates the rule set from tunnel changes (e.g., if you swap NYC for Toronto, only the gateway group changes)
 
 ### 15.5 DNS through the tunnel
@@ -603,15 +603,15 @@ These are Mullvad's internal CGNAT-range DNS resolvers, reachable **only** throu
 
 ---
 
-## 16. Kill Switch — The Five Layers
+## 16. Kill Switch, The Five Layers
 
 A "kill switch" is the property that **if the VPN drops, traffic is blocked, not leaked.** This lab implements it as five independent layers.
 
-### 16.1 Layer 1 — Manual Outbound NAT with no WAN rules
+### 16.1 Layer 1, Manual Outbound NAT with no WAN rules
 
 Already covered in § 14. Without a WAN NAT rule, packets cannot leave the WAN interface with a usable source address. **First and most important** layer.
 
-### 16.2 Layer 2 — DoH/DoT block
+### 16.2 Layer 2, DoH/DoT block
 
 A pfSense alias `DOH_IPS` lists known DNS-over-HTTPS (DoH) and DNS-over-TLS (DoT) provider IPs. Each VLAN has a rule:
 
@@ -619,9 +619,9 @@ A pfSense alias `DOH_IPS` lists known DNS-over-HTTPS (DoH) and DNS-over-TLS (DoT
 Block TCP/UDP from VLANXX_net to DOH_IPS:443-853
 ```
 
-This prevents malware (or a misconfigured browser) from bypassing the standard DNS path with encrypted DNS. Without this layer, a leaked DNS query on port 443 to Cloudflare's `1.1.1.1` would tell the ISP nothing — but it would also bypass pfBlockerNG.
+This prevents malware (or a misconfigured browser) from bypassing the standard DNS path with encrypted DNS. Without this layer, a leaked DNS query on port 443 to Cloudflare's `1.1.1.1` would tell the ISP nothing, but it would also bypass pfBlockerNG.
 
-### 16.3 Layer 3 — Plain DNS block (port 53)
+### 16.3 Layer 3, Plain DNS block (port 53)
 
 ```
 Block TCP/UDP from VLANXX_net to any on port 53
@@ -629,11 +629,11 @@ Block TCP/UDP from VLANXX_net to any on port 53
 
 (Above the egress rule.) Forces all DNS to the local Unbound resolver. A `dig @8.8.8.8` from any VLAN times out.
 
-### 16.4 Layer 4 — RFC 1918 inter-VLAN block
+### 16.4 Layer 4, RFC 1918 inter-VLAN block
 
 Prevents any VLAN from reaching another VLAN's address space. Without this, a compromised IoT device could pivot to attack the user VLAN.
 
-### 16.5 Layer 5 — IPv6 block
+### 16.5 Layer 5, IPv6 block
 
 ```
 Block IPv6 from any to any
@@ -659,9 +659,9 @@ IPv6 is currently disabled lab-wide. The reason: a misconfigured IPv6 stack can 
 
 **pfBlockerNG-devel** is a pfSense package that provides:
 
-- **DNSBL** — DNS Block List. Hooks into Unbound; resolves blocklisted domains to a sinkhole VIP.
-- **IP feed blocking** — Aliases populated from threat-intelligence feeds, used in firewall block rules.
-- **GeoIP** — Block by country code (currently disabled here; outbound is already VPN-tunneled).
+- **DNSBL**, DNS Block List. Hooks into Unbound; resolves blocklisted domains to a sinkhole VIP.
+- **IP feed blocking**, Aliases populated from threat-intelligence feeds, used in firewall block rules.
+- **GeoIP**, Block by country code (currently disabled here; outbound is already VPN-tunneled).
 
 ### 17.2 The DNSBL VIP
 
@@ -684,19 +684,19 @@ All groups update daily at 03:00 via the package's CRON.
 
 | Group | Action | Purpose |
 |---|---|---|
-| PRI1_Spamhaus | Deny Both | Spamhaus DROP and EDROP — hijacked / unallocated netblocks |
-| PRI1_Botnet | Deny Both | Feodo Tracker — known botnet command-and-control IPs |
+| PRI1_Spamhaus | Deny Both | Spamhaus DROP and EDROP, hijacked / unallocated netblocks |
+| PRI1_Botnet | Deny Both | Feodo Tracker, known botnet command-and-control IPs |
 | PRI1_ET | Deny Both | Emerging Threats Compromised Hosts |
 
 These populate aliases used in firewall block rules. Outbound to a Spamhaus DROP IP, for example, never leaves the firewall.
 
 ### 17.5 The auto-generated permit rules
 
-When DNSBL is enabled and the WebServer/VIP mode is set, pfBlockerNG creates floating firewall rules that allow client VLANs to reach the VIP on TCP 80/443 and ICMP. Without these rules, the block page would not render. The lab restricts this to VLAN10, 20, 30, and 50 — VLAN 40 is excluded because it does not need a block page when isolated.
+When DNSBL is enabled and the WebServer/VIP mode is set, pfBlockerNG creates floating firewall rules that allow client VLANs to reach the VIP on TCP 80/443 and ICMP. Without these rules, the block page would not render. The lab restricts this to VLAN10, 20, 30, and 50, VLAN 40 is excluded because it does not need a block page when isolated.
 
 ---
 
-## 18. Intrusion Detection — Suricata
+## 18. Intrusion Detection, Suricata
 
 ### 18.1 What Suricata does
 
@@ -717,7 +717,7 @@ It runs in two modes:
 | VLAN10_USERS | Alert-only | User traffic |
 | VLAN20_IOT | Alert-only | IoT traffic |
 | VLAN30_GUEST | Alert-only | Guest traffic |
-| VLAN40_LAB | Alert-only (new — observation phase) | Suppressions deferred until lab gear is live |
+| VLAN40_LAB | Alert-only (new, observation phase) | Suppressions deferred until lab gear is live |
 | VLAN50_MGMT | Alert-only | Management traffic |
 
 ### 18.3 Why alert-only?
@@ -726,15 +726,15 @@ For a homelab, full inline blocking is high-risk: a single noisy false-positive 
 
 ### 18.4 Rule sources
 
-- **Emerging Threats Open (ET Open)** — free, broad coverage
-- **Snort Subscriber Ruleset** (Registered tier) — community rules
-- **pfSense GPLv2 Community Rules** — bundled with the package
+- **Emerging Threats Open (ET Open)**, free, broad coverage
+- **Snort Subscriber Ruleset** (Registered tier), community rules
+- **pfSense GPLv2 Community Rules**, bundled with the package
 
 Categories enabled: `policy`, `web-attacks`, `current-events`, `malware`, `command-and-control`, `attack-response`, etc. The full set is too long to list inline; per-interface configuration lives in the pfSense Suricata UI.
 
 ---
 
-## 19. Remote Access — Tailscale
+## 19. Remote Access, Tailscale
 
 ### 19.1 What Tailscale is
 
@@ -744,12 +744,12 @@ Each device gets an address in the **Carrier-Grade NAT (CGNAT)** range `100.64.0
 
 ### 19.2 Subnet routing
 
-A Tailscale client running on the firewall can advertise **subnet routes** — physical LAN ranges that the rest of the tailnet should reach via this device. For this lab, only **`10.10.10.0/24`** is currently approved.
+A Tailscale client running on the firewall can advertise **subnet routes**, physical LAN ranges that the rest of the tailnet should reach via this device. For this lab, only **`10.10.10.0/24`** is currently approved.
 
 | Subnet | Advertised | Approved | Reason |
 |---|---|---|---|
 | 10.10.1.0/24 | yes | **no** | Native, no devices |
-| 10.10.10.0/24 | yes | **yes** | User VLAN — only one needed remotely |
+| 10.10.10.0/24 | yes | **yes** | User VLAN, only one needed remotely |
 | 10.10.20.0/24 | yes | **no** | IoT, not needed |
 | 10.10.30.0/24 | yes | **no** | Guest, not needed |
 | 10.10.40.0/24 | yes | **no** | Lab, isolated by design |
@@ -775,8 +775,8 @@ Tailscale ACLs are JSON documents stored in the admin console. The lab uses:
 | Element | Meaning |
 |---|---|
 | `tagOwners` | Defines `tag:home` and says only admins may assign it |
-| ACL `src` | Allowed source identities — devices tagged `tag:home` and any device of the admin user |
-| ACL `dst` | Allowed destination — only the user VLAN, all ports |
+| ACL `src` | Allowed source identities, devices tagged `tag:home` and any device of the admin user |
+| ACL `dst` | Allowed destination, only the user VLAN, all ports |
 | Implicit | Anything not explicitly accepted is **denied** |
 
 ### 19.4 Why one tag?
@@ -807,8 +807,8 @@ The lab follows this approximately: pfSense XML on the local box, on an external
 
 ### 20.3 Encryption tools used
 
-- **age** — modern file encryption, simple key model. Replaces GPG for "encrypt this one file" workflows.
-- **AutoConfigBackup** — pfSense package; encrypts XML before uploading to Netgate's free hosted tier.
+- **age**, modern file encryption, simple key model. Replaces GPG for "encrypt this one file" workflows.
+- **AutoConfigBackup**, pfSense package; encrypts XML before uploading to Netgate's free hosted tier.
 
 ### 20.4 Schedule
 
@@ -912,7 +912,7 @@ This is the core property of **defense in depth**: redundancy across orthogonal 
 | **Subnet ID = VLAN ID convention** | Logs are readable at a glance. `10.10.20.5` is unambiguously a VLAN 20 host. |
 | **RFC 1918 alias for inter-VLAN block** | One rule covers every present and future VLAN. New VLANs are isolated by default. |
 | **Gateway group abstraction** | Failover is automatic and transparent to firewall rules. |
-| **DNS lock-in across all five layers** | Plain DNS, DoH, DoT, IPv6 — every encrypted-DNS bypass path is closed. |
+| **DNS lock-in across all five layers** | Plain DNS, DoH, DoT, IPv6, every encrypted-DNS bypass path is closed. |
 | **Markdown documentation per concern** | Each `configs/*.md` describes both the *what* and the *why*. |
 | **Repeatable test suite** | 10 tests with cadence and pass criteria. Verification is not a vibe. |
 | **Default-deny Tailscale ACL** | Even with tagged devices, the destination set is minimal and explicit. |
@@ -960,7 +960,7 @@ Trade-off accepted because pfSense has no native Time-based One-Time Password (T
 
 ### 25.7 VLAN 50 is "physical-presence" security
 
-Anyone who plugs a laptop into Switch Port 8 has full network access. There is no port security, MAC binding, 802.1X, or alerting on link-up. This is by design — VLAN 50 is the break-glass network. Mitigated by the building's physical access controls, not by network-side controls.
+Anyone who plugs a laptop into Switch Port 8 has full network access. There is no port security, MAC binding, 802.1X, or alerting on link-up. This is by design, VLAN 50 is the break-glass network. Mitigated by the building's physical access controls, not by network-side controls.
 
 ### 25.8 Suricata in alert-only mode
 
@@ -972,16 +972,16 @@ Logs (firewall, Suricata, pfBlockerNG) live on the FW6E box. A reboot, disk corr
 
 ### 25.10 No Uninterruptible Power Supply (UPS)
 
-A brownout drops the VPN tunnels mid-session. The kill switch should hold during reboot, but it has not been verified end-to-end through a real power loss. Add a 1500 VA UPS — known gap.
+A brownout drops the VPN tunnels mid-session. The kill switch should hold during reboot, but it has not been verified end-to-end through a real power loss. Add a 1500 VA UPS, known gap.
 
 ---
 
-## 26. What We Chose Not To Do — and Why
+## 26. What We Chose Not To Do, and Why
 
 | Decision | Reason |
 |---|---|
 | **No 2FA on WebUI** | Pure homelab, single user, WebUI not on WAN, RADIUS overhead not justified |
-| **No GeoIP block** | Outbound is already tunneled via Mullvad — additional GeoIP filter is duplicative |
+| **No GeoIP block** | Outbound is already tunneled via Mullvad, additional GeoIP filter is duplicative |
 | **No VLAN-per-IoT-category** | Two overlapping IoT VLANs increase rule sprawl with marginal isolation benefit |
 | **No Multi-Hop Mullvad** | Latency cost ≥ marginal privacy benefit for a homelab |
 | **No public DNS forwarder** | Defeats DNS lock-in |
@@ -1083,42 +1083,42 @@ A brownout drops the VPN tunnels mid-session. The kill switch should hold during
 ## 29. References and Further Reading
 
 ### Standards
-- **IEEE 802.1Q-2018** — Bridges and Bridged Networks (VLAN tagging)
-- **RFC 1918** — Address Allocation for Private Internets
-- **RFC 1631 / 3022** — Network Address Translation
-- **RFC 4291** — IP Version 6 Addressing Architecture
-- **RFC 8484** — DNS Queries over HTTPS (DoH)
-- **RFC 7858** — DNS over Transport Layer Security (DoT)
+- **IEEE 802.1Q-2018**, Bridges and Bridged Networks (VLAN tagging)
+- **RFC 1918**, Address Allocation for Private Internets
+- **RFC 1631 / 3022**, Network Address Translation
+- **RFC 4291**, IP Version 6 Addressing Architecture
+- **RFC 8484**, DNS Queries over HTTPS (DoH)
+- **RFC 7858**, DNS over Transport Layer Security (DoT)
 
 ### Software
-- pfSense — https://www.pfsense.org/
-- WireGuard — https://www.wireguard.com/
-- Suricata — https://suricata.io/
-- pfBlockerNG-devel — https://github.com/pfsense/FreeBSD-ports/tree/devel/security/pfSense-pkg-pfBlockerNG-devel
-- Unbound — https://www.nlnetlabs.nl/projects/unbound/
-- Tailscale — https://tailscale.com/
+- pfSense, https://www.pfsense.org/
+- WireGuard, https://www.wireguard.com/
+- Suricata, https://suricata.io/
+- pfBlockerNG-devel, https://github.com/pfsense/FreeBSD-ports/tree/devel/security/pfSense-pkg-pfBlockerNG-devel
+- Unbound, https://www.nlnetlabs.nl/projects/unbound/
+- Tailscale, https://tailscale.com/
 
 ### Threat-intelligence feeds used
-- Spamhaus DROP / EDROP — https://www.spamhaus.org/drop/
-- Feodo Tracker (abuse.ch) — https://feodotracker.abuse.ch/
-- URLhaus (abuse.ch) — https://urlhaus.abuse.ch/
-- Phishing Army — https://phishing.army/
-- The Firebog — https://firebog.net/
-- StevenBlack hosts — https://github.com/StevenBlack/hosts
-- Disconnect.me — https://disconnect.me/
+- Spamhaus DROP / EDROP, https://www.spamhaus.org/drop/
+- Feodo Tracker (abuse.ch), https://feodotracker.abuse.ch/
+- URLhaus (abuse.ch), https://urlhaus.abuse.ch/
+- Phishing Army, https://phishing.army/
+- The Firebog, https://firebog.net/
+- StevenBlack hosts, https://github.com/StevenBlack/hosts
+- Disconnect.me, https://disconnect.me/
 
 ### Companion repository documentation
-- [`README.md`](../README.md) — high-level project summary
-- [`CHANGELOG.md`](../CHANGELOG.md) — phase-by-phase history
-- [`configs/firewall-rules.md`](../configs/firewall-rules.md) — per-VLAN rule chains
-- [`configs/nat-rules.md`](../configs/nat-rules.md) — manual outbound NAT rules
-- [`configs/vlan-assignments.md`](../configs/vlan-assignments.md) — interface and subnet map
-- [`configs/switch-port-map.md`](../configs/switch-port-map.md) — GS308E port-VLAN mapping
-- [`configs/vpn-failover.md`](../configs/vpn-failover.md) — WireGuard tunnel and gateway-group config
-- [`configs/pfblockerng.md`](../configs/pfblockerng.md) — DNSBL, IPv4, and update schedule
-- [`configs/tailscale.md`](../configs/tailscale.md) — Tailscale routes, ACL, and tag policy
-- [`configs/backup-procedure.md`](../configs/backup-procedure.md) — backup and restore
-- [`configs/testing-procedures.md`](../configs/testing-procedures.md) — 10-test verification suite
+- [`README.md`](../README.md), high-level project summary
+- [`CHANGELOG.md`](../CHANGELOG.md), phase-by-phase history
+- [`configs/firewall-rules.md`](../configs/firewall-rules.md), per-VLAN rule chains
+- [`configs/nat-rules.md`](../configs/nat-rules.md), manual outbound NAT rules
+- [`configs/vlan-assignments.md`](../configs/vlan-assignments.md), interface and subnet map
+- [`configs/switch-port-map.md`](../configs/switch-port-map.md), GS308E port-VLAN mapping
+- [`configs/vpn-failover.md`](../configs/vpn-failover.md), WireGuard tunnel and gateway-group config
+- [`configs/pfblockerng.md`](../configs/pfblockerng.md), DNSBL, IPv4, and update schedule
+- [`configs/tailscale.md`](../configs/tailscale.md), Tailscale routes, ACL, and tag policy
+- [`configs/backup-procedure.md`](../configs/backup-procedure.md), backup and restore
+- [`configs/testing-procedures.md`](../configs/testing-procedures.md), 10-test verification suite
 
 ---
 

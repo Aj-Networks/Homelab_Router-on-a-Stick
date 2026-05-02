@@ -15,16 +15,16 @@ Remote access layer for the lab. Subnet router on pfSense, restrictive ACLs scop
 
 ## Advertised vs Approved Routes
 
-pfSense advertises all VLANs to Tailscale, but only the user VLAN is approved at the admin console. Approval is the gating layer — unapproved routes are not reachable from any tailnet device.
+pfSense advertises all VLANs to Tailscale, but only the user VLAN is approved at the admin console. Approval is the gating layer, unapproved routes are not reachable from any tailnet device.
 
 | Subnet | Advertised by pfSense | Approved | Why |
 |---|---|---|---|
 | 10.10.1.0/24 | Yes | No | Native trunk, no devices |
-| 10.10.10.0/24 | Yes | **Yes** | User VLAN — only subnet that needs remote reach |
+| 10.10.10.0/24 | Yes | **Yes** | User VLAN, only subnet that needs remote reach |
 | 10.10.20.0/24 | Yes | No | IoT, no remote use case |
 | 10.10.30.0/24 | Yes | No | Guest, no remote use case |
 | 10.10.40.0/24 | Yes | No | Lab, isolated by design |
-| 10.10.50.0/24 | Yes | No | Management — physical-only via switch port 8 |
+| 10.10.50.0/24 | Yes | No | Management, physical-only via switch port 8 |
 
 **Why VLAN 50 stays unapproved:** the management VLAN is the escape-hatch for raw-WAN access via switch port 8. Exposing it remotely dilutes that physical-presence security model. Emergency admin still works through `10.10.10.1` (pfSense LAN-side WebUI) reached via Tailscale on the user VLAN.
 
@@ -66,7 +66,7 @@ Configured at `https://login.tailscale.com/admin/acls/file`.
 
 | Machine | Tag | Notes |
 |---|---|---|
-| `win-dec-2025` | `tag:home` | Primary remote device — gets full VLAN 10 reach |
+| `win-dec-2025` | `tag:home` | Primary remote device, gets full VLAN 10 reach |
 | `mother` | (none) | Subnet router; no client traffic originates from it |
 
 ---
@@ -94,7 +94,7 @@ Tested 2026-04-25 from `win-dec-2025` over phone-hotspot (off-LAN) with Tailscal
 
 ## Key Design Decisions
 
-- **One subnet, one tag, default-deny** — minimum blast radius for a single-user homelab. Avoids premature complexity.
-- **VLAN 50 stays physical** — preserves the port-8 escape-hatch model; remote admin goes through `10.10.10.1` instead.
-- **Admin-user fallback in src** — recovery safety net if the device tag is removed or the device is replaced before being re-tagged.
-- **Tailscale SSH off** — the SSH attack surface is intentionally not extended to tailnet identity until there is a use case.
+- **One subnet, one tag, default-deny**, minimum blast radius for a single-user homelab. Avoids premature complexity.
+- **VLAN 50 stays physical**, preserves the port-8 escape-hatch model; remote admin goes through `10.10.10.1` instead.
+- **Admin-user fallback in src**, recovery safety net if the device tag is removed or the device is replaced before being re-tagged.
+- **Tailscale SSH off**, the SSH attack surface is intentionally not extended to tailnet identity until there is a use case.

@@ -1,10 +1,10 @@
 # Firewall Rules
 
-Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-to-bottom** - first match wins.
+Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-to-bottom**, first match wins.
 
 ---
 
-## LAN - Native (10.10.1.0/24)
+## LAN, Native (10.10.1.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
@@ -15,17 +15,17 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 | 5 | Pass | any | LAN net | any | any | Route via VPN_FAILOVER gateway |
 | 6 | Block | IPv6 | LAN net | any | any | Drop all IPv6 |
 
-> **Note:** LAN (VLAN 1) is the trunk native network used for switch management. It has no RFC1918 block - LAN devices can reach other VLANs by design. Rule #3 allows Microsoft connectivity checks to bypass VPN via WAN directly.
+> **Note:** LAN (VLAN 1) is the trunk native network used for switch management. It has no RFC1918 block, LAN devices can reach other VLANs by design. Rule #3 allows Microsoft connectivity checks to bypass VPN via WAN directly.
 
 ---
 
-## VLAN 10 - Users (10.10.10.0/24)
+## VLAN 10, Users (10.10.10.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
 | 1 | Pass | UDP | VLAN10 net | 10.10.10.1 | 53 | DNS to pfSense resolver |
 | 2 | Pass | TCP | VLAN10 net | 10.10.10.1 | 443 | pfSense WebUI (HTTPS only) |
-| 3 | Pass | ICMP | VLAN10 net | 10.10.10.1 | - | Gateway reachability (ping) |
+| 3 | Pass | ICMP | VLAN10 net | 10.10.10.1 | n/a | Gateway reachability (ping) |
 | 4 | Pass | TCP | VLAN10 net | 10.10.20.5 | 9100 | Allow printing to printer |
 | 5 | Block | TCP/UDP | VLAN10 net | DOH_IPS alias | 443-853 | Block DNS-over-HTTPS / DoT |
 | 6 | Block | TCP/UDP | VLAN10 net | any | 53 | Block plain DNS to WAN |
@@ -33,11 +33,11 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 | 8 | Pass | any | VLAN10 net | any | any | Route via VPN_FAILOVER gateway |
 | 9 | Block | IPv6 | any | any | any | Drop all IPv6 |
 
-> **Note:** Gateway access is scoped to three specific services instead of blanket `any`: DNS (rule #1), WebUI (rule #2), and ICMP for ping (rule #3). SSH, API, and other pfSense services are no longer reachable from VLAN 10 - use VLAN 50 management for those. A temporary rule allowing VLAN 10 to reach switch management at 10.10.1.100 (TCP 80/443) also exists but is kept disabled - only enabled during active lab work.
+> **Note:** Gateway access is scoped to three specific services instead of blanket `any`: DNS (rule #1), WebUI (rule #2), and ICMP for ping (rule #3). SSH, API, and other pfSense services are no longer reachable from VLAN 10, use VLAN 50 management for those. A temporary rule allowing VLAN 10 to reach switch management at 10.10.1.100 (TCP 80/443) also exists but is kept disabled, only enabled during active lab work.
 
 ---
 
-## VLAN 20 - IoT (10.10.20.0/24)
+## VLAN 20, IoT (10.10.20.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
@@ -50,7 +50,7 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 ---
 
-## VLAN 30 - Guest (10.10.30.0/24)
+## VLAN 30, Guest (10.10.30.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
@@ -63,7 +63,7 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 
 ---
 
-## VLAN 40 - Lab (10.10.40.0/24)
+## VLAN 40, Lab (10.10.40.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
@@ -74,24 +74,24 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 | 5 | Pass | any | VLAN40 net | any | any | Route via VPN_FAILOVER gateway |
 | 6 | Block | IPv6 | any | any | any | Drop all IPv6 |
 
-> **Note:** VLAN 40 is excluded from Suricata IDS monitoring - Cisco lab protocols generate high false-positive noise.
+> **Note:** VLAN 40 is excluded from Suricata IDS monitoring, Cisco lab protocols generate high false-positive noise.
 
 ---
 
-## VLAN 50 - Management (10.10.50.0/24)
+## VLAN 50, Management (10.10.50.0/24)
 
 | # | Action | Protocol | Source | Destination | Port | Notes |
 |---|---|---|---|---|---|---|
 | 1 | Pass | UDP | VLAN50 net | 10.10.50.1 | 53 | DNS to pfSense resolver |
 | 2 | Pass | TCP | VLAN50 net | 10.10.50.1 | 443 | pfSense WebUI (HTTPS only) |
 | 3 | Pass | TCP | VLAN50 net | 10.10.50.1 | 22 | SSH to pfSense shell |
-| 4 | Pass | ICMP | VLAN50 net | 10.10.50.1 | - | Gateway reachability (ping) |
+| 4 | Pass | ICMP | VLAN50 net | 10.10.50.1 | n/a | Gateway reachability (ping) |
 | 5 | Block | TCP/UDP | VLAN50 net | any | 53 | Block plain DNS to WAN |
 | 6 | Block | TCP/UDP | VLAN50 net | DOH_IPS alias | 443-853 | Block DoH / DoT |
-| 7 | Pass | any | VLAN50 net | any | any | Direct internet - no VPN, full VLAN reach |
+| 7 | Pass | any | VLAN50 net | any | any | Direct internet, no VPN, full VLAN reach |
 | 8 | Block | IPv6 | VLAN50 net | any | any | Drop all IPv6 |
 
-> **Note:** VLAN 50 intentionally bypasses VPN and RFC1918 rules via rule #7 - direct WAN access and can reach all VLANs, for emergency admin access when something breaks. Gateway access (rules #1-#4) is scoped to the four services actually used: DNS, WebUI, SSH, and ping. Unlike VLAN 10, SSH is included here because VLAN 50 is the designated shell-access VLAN.
+> **Note:** VLAN 50 intentionally bypasses VPN and RFC1918 rules via rule #7, direct WAN access and can reach all VLANs, for emergency admin access when something breaks. Gateway access (rules #1-#4) is scoped to the four services actually used: DNS, WebUI, SSH, and ping. Unlike VLAN 10, SSH is included here because VLAN 50 is the designated shell-access VLAN.
 
 ---
 
@@ -112,9 +112,9 @@ pfBlockerNG automatically creates floating permit rules allowing VLAN10_USERS, V
 
 ## Key Design Decisions
 
-- **DNS is locked to pfSense** - clients cannot query external resolvers directly
-- **DoH/DoT blocked** - prevents bypassing DNS controls via encrypted DNS
-- **RFC1918 block enforces hard VLAN isolation** - no cross-VLAN traffic without an explicit rule above it
-- **VPN_FAILOVER is the default gateway** - all passing traffic exits through Mullvad, not raw WAN
-- **IPv6 fully blocked** - eliminates tunnel leak vectors
-- **VLAN 50 is the only exception** - intentional, for emergency admin access with direct WAN and full internal reach
+- **DNS is locked to pfSense**, clients cannot query external resolvers directly
+- **DoH/DoT blocked**, prevents bypassing DNS controls via encrypted DNS
+- **RFC1918 block enforces hard VLAN isolation**, no cross-VLAN traffic without an explicit rule above it
+- **VPN_FAILOVER is the default gateway**, all passing traffic exits through Mullvad, not raw WAN
+- **IPv6 fully blocked**, eliminates tunnel leak vectors
+- **VLAN 50 is the only exception**, intentional, for emergency admin access with direct WAN and full internal reach

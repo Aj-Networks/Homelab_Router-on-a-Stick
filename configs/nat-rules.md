@@ -2,13 +2,13 @@
 
 All 12 manual Outbound NAT rules as configured in pfSense 2.8.1. Mode is set to **Manual Outbound NAT**.
 
-There are **zero explicit WAN outbound NAT rules** - this is the foundation of the kill switch. VLAN 50 reaches WAN via the system default gateway without a manual NAT rule.
+There are **zero explicit WAN outbound NAT rules**, this is the foundation of the kill switch. VLAN 50 reaches WAN via the system default gateway without a manual NAT rule.
 
 ---
 
 ## Outbound NAT Rules
 
-### VPN_CHI (Chicago - Primary Tier 1)
+### VPN_CHI (Chicago, Primary Tier 1)
 
 | # | Interface | Source | Translation | Notes |
 |---|---|---|---|---|
@@ -19,7 +19,7 @@ There are **zero explicit WAN outbound NAT rules** - this is the foundation of t
 | 5 | VPN_CHI | 10.10.40.0/24 | VPN_CHI address | VLAN40 Lab > Chicago |
 | 6 | VPN_CHI | 10.10.50.0/24 | VPN_CHI address | VLAN50 Management > Chicago |
 
-### VPN_NYC (New York City - Failover Tier 2)
+### VPN_NYC (New York City, Failover Tier 2)
 
 | # | Interface | Source | Translation | Notes |
 |---|---|---|---|---|
@@ -34,7 +34,7 @@ There are **zero explicit WAN outbound NAT rules** - this is the foundation of t
 
 ## Key Design Decisions
 
-- **Manual mode is required** - Auto Outbound NAT would create WAN rules automatically, breaking the kill switch
-- **Every subnet has a rule on both tunnels** - ensures clean failover with no gap
-- **No WAN NAT rules exist** - if both VPN tunnels drop, traffic is blocked, not leaked
-- **VLAN 50 NAT rules (6 and 12) are intentionally unused** - VLAN 50 routes through WAN directly by firewall design, so these rules never match. They're only there to keep the subnet list consistent across both tunnels.
+- **Manual mode is required**, Auto Outbound NAT would create WAN rules automatically, breaking the kill switch
+- **Every subnet has a rule on both tunnels**, ensures clean failover with no gap
+- **No WAN NAT rules exist**, if both VPN tunnels drop, traffic is blocked, not leaked
+- **VLAN 50 NAT rules (6 and 12) are intentionally unused**, VLAN 50 routes through WAN directly by firewall design, so these rules never match. They're only there to keep the subnet list consistent across both tunnels.

@@ -29,7 +29,7 @@ nmap -sT -p 22,53,80,443 10.10.X.1
 
 ## 2. DNSBL verification
 
-From any pfBlockerNG-enabled VLAN (10, 20, 30, 50) - see [pfblockerng.md](pfblockerng.md).
+From any pfBlockerNG-enabled VLAN (10, 20, 30, 50), see [pfblockerng.md](pfblockerng.md).
 
 ```
 dig doubleclick.net @10.10.X.1
@@ -38,7 +38,7 @@ dig googleadservices.com @10.10.X.1
 
 **Pass:** both return `10.10.99.1`.
 
-Then in a browser, visit `http://doubleclick.net` - the pfBlockerNG block page should render.
+Then in a browser, visit `http://doubleclick.net`, the pfBlockerNG block page should render.
 
 From VLAN 40 (excluded):
 
@@ -66,7 +66,7 @@ From any client VLAN, try a DoH resolver directly:
 curl -s -H 'accept: application/dns-message' 'https://1.1.1.1/dns-query?name=example.com&type=A' -o /tmp/resp
 ```
 
-**Pass:** connection times out or is refused (port 443 to `DOH_IPS` alias is blocked - see [firewall-rules.md](firewall-rules.md) rule #3 on VLAN 10, rule #2 on VLANs 20/30/40).
+**Pass:** connection times out or is refused (port 443 to `DOH_IPS` alias is blocked, see [firewall-rules.md](firewall-rules.md) rule #3 on VLAN 10, rule #2 on VLANs 20/30/40).
 
 ---
 
@@ -87,12 +87,12 @@ dig @1.1.1.1 example.com
 
 **Only do this on a test client, not your main machine.**
 
-1. Note current IP at `ipleak.net` from the client - should be a Mullvad exit
-2. On pfSense: `Interfaces > VPN_CHI` - uncheck `Enable`
+1. Note current IP at `ipleak.net` from the client, should be a Mullvad exit
+2. On pfSense: `Interfaces > VPN_CHI`, uncheck `Enable`
 3. Within 30s, gateway group should promote `VPN_NYC`
-4. Refresh `ipleak.net` - should still be a Mullvad exit (NYC this time)
+4. Refresh `ipleak.net`, should still be a Mullvad exit (NYC this time)
 5. Now disable `VPN_NYC` too
-6. Refresh - browser should fail to load anything; no IP leak
+6. Refresh, browser should fail to load anything; no IP leak
 7. Re-enable both interfaces; normal service should resume inside a minute
 
 **Pass:** at no point does the client's real WAN IP appear. Screenshot the `ipleak.net` result before/during/after for the record.
@@ -101,10 +101,10 @@ dig @1.1.1.1 example.com
 
 ## 6. VPN failover drill (softer version of #5)
 
-1. On pfSense: `Status > Gateways` - note `VPN_CHI` is `Online` and primary
+1. On pfSense: `Status > Gateways`, note `VPN_CHI` is `Online` and primary
 2. Suspend the CHI WireGuard peer via `VPN > WireGuard` (toggle off)
 3. Gateway group should mark CHI `Offline`, NYC `Online` and primary
-4. From a client: `curl ifconfig.me` - should show a NYC Mullvad IP
+4. From a client: `curl ifconfig.me`, should show a NYC Mullvad IP
 5. Re-enable CHI; it should reclaim primary within ~30s
 
 ---
@@ -148,7 +148,7 @@ Services > Suricata > Alerts - alerts accumulating, not zero
 
 ---
 
-## 10. Leak tests - full external
+## 10. Leak tests, full external
 
 Visit all of these from one client, capture screenshots:
 

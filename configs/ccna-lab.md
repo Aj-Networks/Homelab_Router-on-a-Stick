@@ -22,7 +22,7 @@ Cisco gear configuration for hands-on CCNA practice, integrated with the home la
               |        |
         [SW1 3560]  [R1 1900]
               |        |
-              | (trunk or routed link — varies per phase)
+              | (trunk or routed link, varies per phase)
               |
         [Lab Laptop on Fa0/3]
 ```
@@ -40,7 +40,7 @@ Cisco gear configuration for hands-on CCNA practice, integrated with the home la
 | Data / Stop / Parity / Flow | 8 / 1 / None / None |
 | COM port | Whatever Windows assigns (check Device Manager) |
 
-One console cable — moved between SW1 and R1 as needed.
+One console cable, moved between SW1 and R1 as needed.
 
 ---
 
@@ -50,10 +50,10 @@ One console cable — moved between SW1 and R1 as needed.
 
 | Device | Management IP | Mask | Default gateway |
 |---|---|---|---|
-| pfSense (mother) | 10.10.40.1 | /24 | — |
+| pfSense (mother) | 10.10.40.1 | /24 | n/a |
 | SW1 (3560) | **10.10.40.2** | /24 | 10.10.40.1 |
 | R1 (1900) | **10.10.40.3** | /24 | 10.10.40.1 |
-| pfSense DHCP pool | 10.10.40.10 – 10.10.40.254 | /24 | 10.10.40.1 |
+| pfSense DHCP pool | 10.10.40.10-10.10.40.254 | /24 | 10.10.40.1 |
 
 Static IPs sit below the DHCP pool to avoid conflicts.
 
@@ -67,7 +67,7 @@ To prevent any mental confusion with home VLAN IDs (1, 10, 20, 30, 40, 50), CCNA
 | 120 | LAB_SERVERS | 192.168.120.0/24 | Future use |
 | 130 | LAB_GUEST | 192.168.130.0/24 | Future use |
 
-These subnets are local to the Cisco lab — not advertised to pfSense, not routable to the Internet through the home lab. To give them Internet, configure NAT/PAT on R1 (CCNA exercise — Phase 11).
+These subnets are local to the Cisco lab, not advertised to pfSense, not routable to the Internet through the home lab. To give them Internet, configure NAT/PAT on R1 (CCNA exercise, Phase 11).
 
 ---
 
@@ -124,13 +124,13 @@ copy running-config startup-config
 
 ### Password storage policy
 
-- **Enable secret:** unique, stored only in the password manager — different per device.
+- **Enable secret:** unique, stored only in the password manager, different per device.
 - **Console + VTY:** shared lab password, stored in the password manager. Same on both devices for ease of use during lab work.
 - **Never** committed to this repository.
 
 ---
 
-## Phase 3 — Management IP (target state)
+## Phase 3: Management IP (target state)
 
 ### SW1 (3560)
 
@@ -218,8 +218,8 @@ One dedicated laptop on one access port covers ~75% of CCNA hands-on topics. Mul
 
 | Resource | Type |
 |---|---|
-| Jeremy's IT Lab — full CCNA 200-301 (YouTube, free) | Video |
-| Wendell Odom — CCNA 200-301 Official Cert Guide Vol 1 + 2 | Book |
+| Jeremy's IT Lab, full CCNA 200-301 (YouTube, free) | Video |
+| Wendell Odom, CCNA 200-301 Official Cert Guide Vol 1 + 2 | Book |
 | Boson ExSim-Max for CCNA | Practice exams |
 | Anki deck (Jeremy's IT Lab) | Spaced-repetition memorization |
 
@@ -227,9 +227,9 @@ One dedicated laptop on one access port covers ~75% of CCNA hands-on topics. Mul
 
 ## Backup
 
-Cisco device configs are exported via the existing backup workflow — see [`backup-procedure.md`](backup-procedure.md). For each device:
+Cisco device configs are exported via the existing backup workflow, see [`backup-procedure.md`](backup-procedure.md). For each device:
 
-1. From console: `show running-config` — copy/paste output to text file
+1. From console: `show running-config`, copy/paste output to text file
 2. Strip the passwords (or encrypt with `age` per the same policy as the GS308E binary)
 3. Optionally upload via TFTP to a workstation: `copy running-config tftp://10.10.40.X/SW1.cfg`
 
