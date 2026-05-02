@@ -117,10 +117,6 @@ Homelab_Router-on-a-Stick/
 
 - [`LAB_TECHNICAL_GUIDE.md`](docs/LAB_TECHNICAL_GUIDE.md), What this lab is, who it is for, how every layer works, what was done well, what is limited, and a glossary of every acronym used
 
-**Featured build showcase, layout demo:**
-
-- [`BUILD_SHOWCASE.md`](docs/BUILD_SHOWCASE.md), Five layout styles for displaying raw build photos and embedded videos. Pick one, copy into the README, drop in your own images.
-
 **Full PDF manuals**, detailed writeups with pfSense UI screenshots in [`/docs`](docs/):
 
 - [`HOME_LAB_v2.pdf`](docs/HOME_LAB_v2.pdf), Full architecture writeup
