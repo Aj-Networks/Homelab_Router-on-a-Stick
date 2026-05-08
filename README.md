@@ -108,6 +108,7 @@ Homelab_Router-on-a-Stick/
 - [`switch-port-map.md`](configs/switch-port-map.md), GS308E port-by-port VLAN assignments
 - [`vpn-failover.md`](configs/vpn-failover.md), WireGuard tunnel config and gateway group logic
 - [`tailscale.md`](configs/tailscale.md), Tailscale subnet routes, ACL policy, and device tags
+- [`r6400-setup.md`](configs/r6400-setup.md), Netgear R6400 AP-mode setup and recovery procedure
 - [`ccna-lab/`](configs/ccna-lab/), Cisco 3560 + 1900 CCNA lab folder, plan + cable labels + show-run dumps + screenshots
 
 **Educational deep-dive**, 29-section technical guide written for networking learners:
