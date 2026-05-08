@@ -8,6 +8,7 @@ All hands-on Cisco gear documentation for the home CCNA lab. Hardware: Cisco Cat
 |---|---|
 | [`ccna-lab.md`](ccna-lab.md) | The lab plan: topology, IP scheme, baseline configs, phase progression (0-16), house rules |
 | [`cable-labels.docx`](cable-labels.docx) | Printable cable label sheet, cut and wrap around each cable end |
+| [`topology/`](topology/) | Topology diagrams (e.g. `ccna.webp`). Source-of-truth visuals for the lab layout |
 | [`show-runs/`](show-runs/) | Per-phase `show running-config` dumps, one per device per phase |
 | [`screenshots/`](screenshots/) | PuTTY captures, ping output, verification screenshots |
 
