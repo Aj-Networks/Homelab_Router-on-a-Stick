@@ -1,0 +1,10 @@
+# screenshots
+
+PuTTY captures, ping output, verification screenshots, photos of physical setup.
+
+Naming: `<device>-phase<N>-<descriptor>.<ext>`
+- `SW1-phase3-pingtest.png`
+- `R1-phase3-show-ip-int-brief.txt`
+- `setup-phase0-cable-routing.jpg`
+
+Accepted formats: png, jpg, txt. Keep file sizes reasonable (<1 MB per image, resize/compress before commit).

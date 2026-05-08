@@ -1,0 +1,12 @@
+# show-runs
+
+Per-phase `show running-config` dumps from SW1 and R1. One file per device per phase.
+
+Naming: `<device>-phase<N>.txt`  e.g. `SW1-phase3.txt`, `R1-phase6.txt`
+
+**Strip secrets before committing**:
+- Remove `enable secret 5 ...` lines
+- Remove `password 7 ...` lines
+- Replace any cleartext community strings or shared keys with `<REDACTED>`
+
+The encrypted Cisco hashes are weak and should not live in a public repo.
