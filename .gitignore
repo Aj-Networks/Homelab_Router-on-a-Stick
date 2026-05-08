@@ -14,3 +14,8 @@ desktop.ini
 *.key
 *.pem
 *.conf
+
+# Personal hardware reference images (kept local, not for public repo)
+diagrams/FW6E.png
+diagrams/GS308E.png
+diagrams/R6400.png

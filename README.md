@@ -84,10 +84,7 @@ Homelab_Router-on-a-Stick/
 │
 ├── diagrams/                        # Network topology and VLAN diagrams
 │   ├── network-topology.png
-│   ├── vlan-ip-detail.png
-│   ├── FW6E.png
-│   ├── GS308E.png
-│   └── R6400.png
+│   └── vlan-ip-detail.png
 │
 ├── docs/                            # Full PDF manuals (detailed writeups)
 │   ├── HOME_LAB_v2.pdf
