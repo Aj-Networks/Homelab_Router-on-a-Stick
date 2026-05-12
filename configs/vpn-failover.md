@@ -1,23 +1,33 @@
 # VPN Failover
 
-Dual Mullvad WireGuard tunnel configuration with automatic gateway failover in pfSense 2.8.1, plus alternate tunnels available for manual switching.
+Dual Mullvad WireGuard tunnel configuration with automatic gateway failover in pfSense 2.8.1. Both exits are EU jurisdiction by design.
 
 ---
 
-## Tunnels
+## Naming convention
 
-### Active in failover group
+Short, location-coded names. Format: `<TYPE>_<COUNTRY>_<CITY>`.
 
-| Name | Provider | Exit City | WireGuard Port | Role |
+| Type prefix | Used for | Example |
+|---|---|---|
+| `PEER_` | WireGuard peer entry in pfSense | `PEER_SWE_MMA` |
+| `INT_` | Assigned wg interface | `INT_SWE_MMA` |
+| `GW_` | Gateway in System > Routing > Gateways | `GW_SWE_MMA` |
+
+Country = ISO 3-letter code (SWE, DEU, NLD, CHE, USA, etc.). City = airport code (MMA, FRA, AMS, ZRH, NYC, etc.).
+
+Old long names (`GW_WG_MULLVAD_SWE_MMA`, etc.) are deprecated. Rename anything that still uses the old format on next touch.
+
+---
+
+## Active tunnels (in failover group)
+
+| Name | Provider | Exit City | Tier | Role |
 |---|---|---|---|---|
-| VPN_CHI | Mullvad | Chicago, IL | 51820 | Primary, Tier 1 |
-| VPN_NYC | Mullvad | New York City, NY | 51821 | Failover, Tier 2 |
+| `INT_SWE_MMA` / `GW_SWE_MMA` | Mullvad | Malmö, Sweden | 1 | Primary, all traffic routes here by default |
+| `INT_DEU_FRA` / `GW_DEU_FRA` | Mullvad | Frankfurt, Germany | 2 | Failover, promoted automatically if Tier 1 fails |
 
-### Available alternates (manual switch, not in failover group)
-
-| Name | Provider | Exit City | WireGuard Port | Use case |
-|---|---|---|---|---|
-| MULLVAD_SWE_MMA | Mullvad | Malmö, Sweden | 51820 | EU exit on demand (geo-restricted services, privacy preference) |
+Retired: `VPN_CHI` (deleted), `VPN_NYC` (disabled, kept as break-glass US fallback config).
 
 ---
 
@@ -25,14 +35,29 @@ Dual Mullvad WireGuard tunnel configuration with automatic gateway failover in p
 
 | Gateway | Tier | Behavior |
 |---|---|---|
-| GW_VPN_CHI | 1 | Active, all traffic routes here by default |
-| GW_VPN_NYC | 2 | Standby, promoted automatically if Tier 1 fails |
+| `GW_SWE_MMA` | 1 | Active, all traffic routes here by default |
+| `GW_DEU_FRA` | 2 | Standby, promoted automatically if Tier 1 fails |
 
-Trigger: pfSense monitors gateway health via ICMP. If `GW_VPN_CHI` goes down, `GW_VPN_NYC` is promoted to active with no manual intervention.
+Trigger Level: **Member Down**. pfSense monitors gateway health via ICMP. If `GW_SWE_MMA` goes down, `GW_DEU_FRA` is promoted with no manual intervention.
 
 All internal firewall rules use `VPN_FAILOVER` as their gateway, not individual tunnel gateways. This ensures failover is automatic and transparent.
 
-`MULLVAD_SWE_MMA` is NOT in this group. To use it, edit the relevant firewall rule's gateway from `VPN_FAILOVER` to `GW_MULLVAD_SWE_MMA`, save, and apply.
+---
+
+## Gateway monitoring
+
+Both gateways use the **same in-tunnel monitor IP**: `10.64.0.1` (Mullvad's standard internal gateway address).
+
+| Gateway | Monitor IP | Where the ping goes |
+|---|---|---|
+| `GW_SWE_MMA` | `10.64.0.1` | Through MMA tunnel, hits MMA's Mullvad server |
+| `GW_DEU_FRA` | `10.64.0.1` | Through FRA tunnel, hits FRA's Mullvad server |
+
+**Why the same IP works for both:** pfSense forces each gateway's monitor traffic through its own interface. Same target IP, two different paths, two independent health checks.
+
+**Why not public DNS (1.1.1.1 / 8.8.8.8 / 9.9.9.9):** ICMP goes through the tunnel either way (no ISP leak), but pinging Google/Cloudflare/Quad9 introduces a small external dependency inconsistent with the zero-trust goal. `10.64.0.1` keeps every health-check ping inside Mullvad's infrastructure.
+
+**Fallback if `10.64.0.1` does not respond on a specific server:** try `100.64.0.x` (the DNS IP from that server's `.conf`). Last resort: a public DNS IP.
 
 ---
 
@@ -42,9 +67,8 @@ DNS is locked to the VPN tunnels, it cannot leak to WAN under any condition, inc
 
 | DNS Server | Mapped Interface | Exit |
 |---|---|---|
-| 100.64.0.1 | VPN_CHI | Mullvad Chicago |
-| 100.64.0.2 | VPN_NYC | Mullvad NYC |
-| 100.64.0.31 | MULLVAD_SWE_MMA | Mullvad Malmö (only active when this tunnel is selected) |
+| 100.64.0.31 | `INT_SWE_MMA` | Mullvad Malmö |
+| (FRA DNS from its `.conf`) | `INT_DEU_FRA` | Mullvad Frankfurt |
 
 - DNS Resolver is bound strictly to internal interfaces and outbound only via the active VPN tunnel
 - System DNS uses the Mullvad addresses above
@@ -60,7 +84,7 @@ If all tunnels go down at the same time, the NAT and firewall layers make sure t
 
 ## WireGuard config explained (plain English)
 
-Every Mullvad WireGuard config has the same structure. Using the MULLVAD_SWE_MMA file as a worked example:
+Every Mullvad WireGuard config has the same structure. Using the SWE_MMA file as a worked example:
 
 ```ini
 [Interface]
@@ -102,29 +126,34 @@ That is the entire WireGuard handshake summarized in plain English.
 
 ## Adding a new Mullvad tunnel (procedure)
 
+Use the naming convention from the top of this doc. Example uses Frankfurt.
+
 1. Mullvad account > WireGuard configuration > pick city > Download config (`.conf` file)
-2. pfSense > VPN > WireGuard > Tunnels > Add Tunnel
-   - Description: e.g. `MULLVAD_SWE_MMA`
-   - Listen Port: leave blank (random) unless coexisting with another on same port
+2. pfSense > VPN > WireGuard > Tunnels > Add Tunnel named `PEER_DEU_FRA`
+   - Listen Port: leave blank (random)
    - Interface Keys > Private Key: paste from the `.conf` file `PrivateKey`
 3. Add Peer to the tunnel
    - Public Key: paste from `.conf` file `[Peer] PublicKey`
    - Endpoint: paste `Endpoint` value (IP + port)
    - Allowed IPs: `0.0.0.0/0` (full-tunnel)
-4. Interfaces > Assignments > Add the new wg interface
+4. Interfaces > Assignments > Add the new wg interface, description `INT_DEU_FRA`
 5. Interfaces > the new interface > Enable, set IPv4 = Static, fill `Address` value from `.conf` (e.g. `10.x.3.xxx/32`)
-6. System > Routing > Gateways > Add gateway pointing at the tunnel's far-side IP (Mullvad standard: `10.64.0.1` for the wg gateway, verify per their docs)
+6. System > Routing > Gateways > Add `GW_DEU_FRA`
+   - Gateway IP: the `.conf` `Address` minus `/32`
+   - Monitor IP: `10.64.0.1`
 7. System > General Setup > DNS Servers > add the new `100.64.0.x` DNS from the `.conf`, map it to the new gateway, check "Do not use DNS servers from DHCP"
 8. Firewall > NAT > Outbound > add hybrid/manual NAT rule mapping internal nets to the new wg interface
-9. Test: traceroute from a client, confirm the exit IP via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check)
+9. System > Routing > Gateway Groups > Edit `VPN_FAILOVER` > add the new gateway at the desired tier
+10. Test: traceroute from a client, confirm the exit IP via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check)
 
 ---
 
 ## Verified Behavior
 
-- Failover CHI > NYC confirmed under simulated tunnel failure
-- Zero DNS/IP/WebRTC leaks confirmed via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check) ([ipleak screenshot](../screenshots/ipleak.png)) ([mullvad screenshot](../screenshots/mullvad.png)) on both tunnels
+- Failover SWE_MMA > DEU_FRA confirmed under simulated tunnel failure
+- Zero DNS/IP/WebRTC leaks confirmed via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check) on both tunnels
 - DNS remains on Mullvad servers throughout failover, no ISP DNS exposure
+- Both gateways health-check cleanly using in-tunnel `10.64.0.1` monitor IP
 
 ---
 
