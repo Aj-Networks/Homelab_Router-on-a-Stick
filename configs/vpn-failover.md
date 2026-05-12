@@ -46,18 +46,20 @@ All internal firewall rules use `VPN_FAILOVER` as their gateway, not individual 
 
 ## Gateway monitoring
 
-Both gateways use the **same in-tunnel monitor IP**: `10.64.0.1` (Mullvad's standard internal gateway address).
+Each gateway needs a **unique** Monitor IP. pfSense installs a static route per gateway pinning the Monitor IP to that gateway's interface, so two gateways cannot share the same Monitor IP without one of them breaking.
 
-| Gateway | Monitor IP | Where the ping goes |
+| Gateway | Monitor IP | Source |
 |---|---|---|
-| `GW_SWE_MMA` | `10.64.0.1` | Through MMA tunnel, hits MMA's Mullvad server |
-| `GW_DEU_FRA` | `10.64.0.1` | Through FRA tunnel, hits FRA's Mullvad server |
+| `GW_SWE_MMA` | `100.64.0.31` | The `DNS =` line in the SWE_MMA `.conf` (Mullvad's per-server DNS for that exit) |
+| `GW_DEU_FRA` | (DNS IP from the FRA `.conf`, a different `100.64.0.x`) | The `DNS =` line in the DEU_FRA `.conf` |
 
-**Why the same IP works for both:** pfSense forces each gateway's monitor traffic through its own interface. Same target IP, two different paths, two independent health checks.
+**Why per-server DNS:** Each Mullvad server has its own `100.64.0.x` DNS address that lives inside that server's tunnel. Pings stay entirely within Mullvad's infrastructure (zero external dependency) and the IPs are distinct so pfSense static routes do not collide.
 
-**Why not public DNS (1.1.1.1 / 8.8.8.8 / 9.9.9.9):** ICMP goes through the tunnel either way (no ISP leak), but pinging Google/Cloudflare/Quad9 introduces a small external dependency inconsistent with the zero-trust goal. `10.64.0.1` keeps every health-check ping inside Mullvad's infrastructure.
+**Why not `10.64.0.1` for both:** pfSense's per-gateway static-route mechanism cannot route the same Monitor IP through two interfaces simultaneously - one gateway's monitor breaks.
 
-**Fallback if `10.64.0.1` does not respond on a specific server:** try `100.64.0.x` (the DNS IP from that server's `.conf`). Last resort: a public DNS IP.
+**Why not public DNS (1.1.1.1 / 8.8.8.8 / 9.9.9.9) by default:** ICMP would go through the tunnel either way (no ISP leak), but pinging Google/Cloudflare/Quad9 introduces a small external dependency inconsistent with the zero-trust goal.
+
+**Fallback if a Mullvad server does not respond to ICMP on its `100.64.0.x`:** use a different public DNS per gateway (e.g. `1.1.1.1` for one, `9.9.9.9` for the other). Acceptable compromise.
 
 ---
 
@@ -140,7 +142,7 @@ Use the naming convention from the top of this doc. Example uses Frankfurt.
 5. Interfaces > the new interface > Enable, set IPv4 = Static, fill `Address` value from `.conf` (e.g. `10.x.3.xxx/32`)
 6. System > Routing > Gateways > Add `GW_DEU_FRA`
    - Gateway IP: the `.conf` `Address` minus `/32`
-   - Monitor IP: `10.64.0.1`
+   - Monitor IP: the `.conf` `DNS =` IP for THIS tunnel (must be different from every other gateway's Monitor IP)
 7. System > General Setup > DNS Servers > add the new `100.64.0.x` DNS from the `.conf`, map it to the new gateway, check "Do not use DNS servers from DHCP"
 8. Firewall > NAT > Outbound > add hybrid/manual NAT rule mapping internal nets to the new wg interface
 9. System > Routing > Gateway Groups > Edit `VPN_FAILOVER` > add the new gateway at the desired tier
@@ -153,7 +155,7 @@ Use the naming convention from the top of this doc. Example uses Frankfurt.
 - Failover SWE_MMA > DEU_FRA confirmed under simulated tunnel failure
 - Zero DNS/IP/WebRTC leaks confirmed via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check) on both tunnels
 - DNS remains on Mullvad servers throughout failover, no ISP DNS exposure
-- Both gateways health-check cleanly using in-tunnel `10.64.0.1` monitor IP
+- Each gateway health-checks via its own per-server Mullvad DNS IP (in-tunnel, unique per gateway)
 
 ---
 
