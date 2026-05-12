@@ -46,20 +46,40 @@ All internal firewall rules use `VPN_FAILOVER` as their gateway, not individual 
 
 ## Gateway monitoring
 
-Each gateway needs a **unique** Monitor IP. pfSense installs a static route per gateway pinning the Monitor IP to that gateway's interface, so two gateways cannot share the same Monitor IP without one of them breaking.
+Each gateway needs a **unique** Monitor IP. pfSense installs one static route per Monitor IP pinning it to that gateway's interface. Two gateways sharing the same Monitor IP collide - the static route pins to only one of them, the other's monitor traffic exits the wrong tunnel, and that gateway falsely shows Offline.
 
-| Gateway | Monitor IP | Source |
+### Verified working configuration
+
+| Gateway | Monitor IP | Notes |
 |---|---|---|
-| `GW_SWE_MMA` | `100.64.0.31` | The `DNS =` line in the SWE_MMA `.conf` (Mullvad's per-server DNS for that exit) |
-| `GW_DEU_FRA` | (DNS IP from the FRA `.conf`, a different `100.64.0.x`) | The `DNS =` line in the DEU_FRA `.conf` |
+| `GW_SWE_MMA` | `1.1.1.1` | Cloudflare DNS, distinct public IP |
+| `GW_DEU_FRA` | `9.9.9.9` | Quad9 DNS, distinct public IP |
 
-**Why per-server DNS:** Each Mullvad server has its own `100.64.0.x` DNS address that lives inside that server's tunnel. Pings stay entirely within Mullvad's infrastructure (zero external dependency) and the IPs are distinct so pfSense static routes do not collide.
+ICMP travels through each respective tunnel (no ISP leak - your WAN sees only the encrypted WireGuard packets). The remote target sees Mullvad's exit IP, not yours.
 
-**Why not `10.64.0.1` for both:** pfSense's per-gateway static-route mechanism cannot route the same Monitor IP through two interfaces simultaneously - one gateway's monitor breaks.
+### Why NOT use Mullvad's `100.64.0.31` as monitor
 
-**Why not public DNS (1.1.1.1 / 8.8.8.8 / 9.9.9.9) by default:** ICMP would go through the tunnel either way (no ISP leak), but pinging Google/Cloudflare/Quad9 introduces a small external dependency inconsistent with the zero-trust goal.
+`100.64.0.31` is Mullvad's per-server DNS IP, **reused across many servers**. If both gateways use it as Monitor IP, pfSense pins the static route for `100.64.0.31` to whichever gateway was configured last - the other gateway's monitor traffic exits the wrong tunnel and marks the gateway falsely Offline. Verified in this lab on 2026-05.
 
-**Fallback if a Mullvad server does not respond to ICMP on its `100.64.0.x`:** use a different public DNS per gateway (e.g. `1.1.1.1` for one, `9.9.9.9` for the other). Acceptable compromise.
+### Why NOT use `10.64.0.1` (Mullvad's tunnel gateway)
+
+Same issue - it is also reused across servers. Distinct IP per gateway is required.
+
+### If you want fully in-tunnel monitoring later
+
+You would need a unique IP per Mullvad server that responds to ICMP. Mullvad does not publish such addresses. Public DNS (above) is the pragmatic choice and is the verified path.
+
+---
+
+## DNS Server Settings (System > General Setup)
+
+| Setting | Value |
+|---|---|
+| DNS Servers | Single entry: `100.64.0.31`, Gateway = **default** (blank) |
+| DNS Server Override | Unchecked |
+| DNS Resolution Behavior | Use local DNS (127.0.0.1), fall back to remote DNS Servers |
+
+**Why a single entry with default gateway:** Mullvad reuses `100.64.0.31` across servers. A second entry with the same IP but a different gateway forces pfSense to pin a static route to only one gateway, which breaks the other gateway's DNS path during failover. Leaving Gateway = default lets DNS follow the `VPN_FAILOVER` group's active tier transparently.
 
 ---
 
@@ -67,13 +87,12 @@ Each gateway needs a **unique** Monitor IP. pfSense installs a static route per 
 
 DNS is locked to the VPN tunnels, it cannot leak to WAN under any condition, including during failover.
 
-| DNS Server | Mapped Interface | Exit |
+| DNS Server | Mapped Gateway | Effect |
 |---|---|---|
-| 100.64.0.31 | `INT_SWE_MMA` | Mullvad Malmö |
-| (FRA DNS from its `.conf`) | `INT_DEU_FRA` | Mullvad Frankfurt |
+| `100.64.0.31` | default (blank) | Follows the active `VPN_FAILOVER` tier - MMA primary, FRA on failover |
 
 - DNS Resolver is bound strictly to internal interfaces and outbound only via the active VPN tunnel
-- System DNS uses the Mullvad addresses above
+- System DNS uses one Mullvad address with default gateway (not pinned to a specific tunnel) so DNS fails over with the gateway group
 - No fallback to ISP DNS exists
 
 ---
@@ -142,7 +161,7 @@ Use the naming convention from the top of this doc. Example uses Frankfurt.
 5. Interfaces > the new interface > Enable, set IPv4 = Static, fill `Address` value from `.conf` (e.g. `10.x.3.xxx/32`)
 6. System > Routing > Gateways > Add `GW_DEU_FRA`
    - Gateway IP: the `.conf` `Address` minus `/32`
-   - Monitor IP: the `.conf` `DNS =` IP for THIS tunnel (must be different from every other gateway's Monitor IP)
+   - Monitor IP: a distinct public DNS IP not used by any other gateway (e.g. `9.9.9.9` if `1.1.1.1` is taken). Do NOT use Mullvad's `100.64.0.x` here, it is reused across servers and breaks pfSense static routing
 7. System > General Setup > DNS Servers > add the new `100.64.0.x` DNS from the `.conf`, map it to the new gateway, check "Do not use DNS servers from DHCP"
 8. Firewall > NAT > Outbound > add hybrid/manual NAT rule mapping internal nets to the new wg interface
 9. System > Routing > Gateway Groups > Edit `VPN_FAILOVER` > add the new gateway at the desired tier
@@ -155,7 +174,7 @@ Use the naming convention from the top of this doc. Example uses Frankfurt.
 - Failover SWE_MMA > DEU_FRA confirmed under simulated tunnel failure
 - Zero DNS/IP/WebRTC leaks confirmed via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check) on both tunnels
 - DNS remains on Mullvad servers throughout failover, no ISP DNS exposure
-- Each gateway health-checks via its own per-server Mullvad DNS IP (in-tunnel, unique per gateway)
+- Each gateway health-checks via a distinct public DNS IP (MMA = 1.1.1.1, FRA = 9.9.9.9). ICMP routes through respective tunnel, no ISP leak
 
 ---
 
