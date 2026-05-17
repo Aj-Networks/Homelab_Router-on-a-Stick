@@ -109,6 +109,7 @@ Homelab_Router-on-a-Stick/
 - [`vpn-failover.md`](configs/vpn-failover.md), WireGuard tunnel config and gateway group logic
 - [`tailscale.md`](configs/tailscale.md), Tailscale subnet routes, ACL policy, and device tags
 - [`r6400-setup.md`](configs/r6400-setup.md), Netgear R6400 AP-mode setup and recovery procedure
+- [`mac-mini/`](configs/mac-mini/), Mac Mini M4 home server folder, macOS setup + remote access + future Docker host for self-hosted services
 - [`ccna-lab/`](configs/ccna-lab/), Cisco 3560 + 1900 CCNA lab folder, plan + cable labels + show-run dumps + screenshots
 
 **Educational deep-dive**, 29-section technical guide written for networking learners:
