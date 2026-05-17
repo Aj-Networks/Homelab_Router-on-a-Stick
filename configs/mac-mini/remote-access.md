@@ -17,7 +17,9 @@ See [`setup.md`](setup.md) for the full Sharing config.
 | SSH | 22 | Command line (Terminal-style) |
 | VNC | 5900 | Full graphical desktop |
 
-The Mac's current IP is whatever pfSense's DHCP lease shows (target: `10.10.20.10` once it lives on VLAN 20 with a reservation). Find it by:
+Mac's current IP: **`10.10.10.250`** (pinned by DHCP reservation in pfSense, VLAN10_USERS tab). Target after VLAN 20 migration: `10.10.20.10`.
+
+Verify with:
 - On the Mac: `ipconfig getifaddr en0` in Terminal
 - In pfSense: Status > DHCP Leases
 

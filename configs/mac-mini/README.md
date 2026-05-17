@@ -13,14 +13,14 @@ Apple Silicon home server running 24/7 as the lab's Docker host, remote-manageab
 
 ## Network placement
 
-| Item | Target | Status |
+| Item | Current | Target |
 |---|---|---|
-| VLAN | 20 (Servers / IoT) | Target, awaiting unmanaged 5-port switch (TP-Link TL-SG105 or similar) to share GS308E port 5 |
-| Physical port | Behind a new dumb switch hanging off GS308E port 5 | Pending switch purchase |
-| IP | `10.10.20.10` (DHCP reservation in pfSense) | Pending |
-| Hostname | `mac-mini-home` (suggested) | Set in macOS sharing settings |
+| VLAN | 10 (Users) - temporary | 20 (Servers / IoT) once unmanaged 5-port switch (TP-Link TL-SG105) is in place behind GS308E port 5 |
+| MAC address | `xx:xx:xx:xx:xx:xx` (in password manager / pfSense reservation, not in this repo) | n/a |
+| IP | `10.10.10.250` (DHCP reservation in pfSense, VLAN10_USERS tab) | `10.10.20.10` once moved to VLAN 20 |
+| Hostname | `mac-mini-home` | same |
 
-Until the dumb switch arrives, the Mac is on a temporary port for initial setup. Move to VLAN 20 once gear is in hand.
+Reservation lives in **pfSense > Services > DHCP Server > VLAN10_USERS > Static Mappings**. When the Mac moves to VLAN 20, delete this reservation and recreate under the VLAN20 tab with IP `10.10.20.10`.
 
 ## Current state
 
@@ -30,6 +30,7 @@ Until the dumb switch arrives, the Mac is on a temporary port for initial setup.
 | Screen Sharing (VNC) enabled with VNC password | Done. See [`remote-access.md`](remote-access.md) |
 | Remote Login (SSH) enabled for admin user | Done. See [`remote-access.md`](remote-access.md) |
 | Verified remote access from Windows PC via RealVNC Viewer + PowerShell SSH | Done |
+| DHCP reservation in pfSense pinning Mac to `10.10.10.250` | Done |
 
 ## Coming next
 
