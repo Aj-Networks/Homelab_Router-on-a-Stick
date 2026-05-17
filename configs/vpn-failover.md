@@ -115,7 +115,7 @@ Address = 10.x.3.xxx/32
 DNS = 100.64.0.31
 
 [Peer]
-PublicKey = vi0PPk0ZCDvDMCSQD0mctmPFFH7NiawLxJquyPIGwAY=
+PublicKey = <mullvad-server-public-key>
 AllowedIPs = 0.0.0.0/0
 Endpoint = 45.x.59.xx:51820
 ```
