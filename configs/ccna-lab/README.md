@@ -2,6 +2,10 @@
 
 All hands-on Cisco gear documentation for the home CCNA lab. Hardware: Cisco Catalyst 3560 (`SW1`) + Cisco 1900 ISR (`R1`), uplinked into the home lab via VLAN 40.
 
+## Topology
+
+![CCNA lab topology](topology/ccna.webp)
+
 ## Contents
 
 | Item | What it is |
