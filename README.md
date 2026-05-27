@@ -66,7 +66,7 @@
 ## 🧭 Network architecture
 
 <p align="center">
-  <img src="diagrams/network-topology.png" alt="Network topology" width="85%"/>
+  <img src="diagrams/network-topology.png" alt="Network topology" width="100%"/>
 </p>
 
 **Data flow (top to bottom):**
@@ -127,7 +127,7 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 ## 🗂 VLAN & IP plan
 
 <p align="center">
-  <img src="diagrams/vlan-ip-detail.png" alt="VLAN and IP detail" width="85%"/>
+  <img src="diagrams/vlan-ip-detail.png" alt="VLAN and IP detail" width="100%"/>
 </p>
 
 **Subnet convention:** third octet matches VLAN ID. Logs read at a glance.
