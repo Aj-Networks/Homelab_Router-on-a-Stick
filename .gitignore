@@ -19,3 +19,11 @@ desktop.ini
 diagrams/FW6E.png
 diagrams/GS308E.png
 diagrams/R6400.png
+
+# Screenshots (local only, not deployed)
+screenshots/
+
+# Claude Code / AI assistant artifacts (contains local paths and private memory pointers)
+.claude/
+CLAUDE.md
+.local-notes.md
