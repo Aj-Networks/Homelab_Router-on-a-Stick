@@ -34,7 +34,7 @@
 | **VPN tunnels** | 2 (Mullvad Sweden + Germany, auto-failover) |
 | **Kill switch layers** | 7 (NAT, DoH/DoT block, port 53 block, RFC1918 block, IPv6 block, DNS lockdown, no WAN egress NAT) |
 | **Verified zero leaks** | DNS, IP, WebRTC (ipleak.net + Mullvad Check) |
-| **Total hardware cost** | ~$1,160 |
+| **Total hardware cost** | ~$1,960 |
 
 ---
 
