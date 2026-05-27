@@ -49,7 +49,8 @@
 | IDS / DNS filter | Suricata + pfBlockerNG-devel |
 | Overlay / remote access | Tailscale |
 | App host | Mac Mini M4 (24/7 Docker host) |
-| Lab gear | Cisco Catalyst 3560 + Cisco 1900 (isolated VLAN 40) |
+| Lab gear | Cisco Catalyst 3560 PoE-8 (WS-C3560-8PC) + Cisco 1941 ISR (CISCO1941), isolated on VLAN 40 |
+| CCNA target | Hands-on prep on the Cisco gear, scheduled for the Aug 2026 exam |
 
 ---
 
@@ -60,6 +61,21 @@
 | **2026-05** | Replaced R6400 with **UniFi U7 Lite** (WiFi 7, VLAN-tagged SSIDs, stable AP mode) |
 | **2026-05** | Added **Mac Mini M4** as 24/7 Docker host for self-hosted services |
 | **2026-05** | Migrated VPN from US exits (CHI/NYC) to EU exits (Sweden/Frankfurt) |
+
+---
+
+## 📈 Lab evolution
+
+How this lab grew, one layer at a time. Full changelog in [`CHANGELOG.md`](CHANGELOG.md).
+
+| Era | Milestone |
+|---|---|
+| **2017-2023** | Self-taught Cisco IOS on the Catalyst 3560 PoE-8 and 1941 router. VLANs, trunking, ACLs, basic routing. CCNA self-study, no public docs from this period |
+| **Early 2024** | Acquired Protectli FW6E. pfSense 2.8.1, ISP modem to bridge mode, stateful firewall replaces consumer NAT. GS308E v4 added for 802.1Q trunking |
+| **Mid / Late 2024** | First Mullvad WireGuard tunnel (Chicago). Policy-based outbound routing per VLAN. Kill switch via zero WAN egress NAT rules |
+| **2025** | DoH/DoT blocking on ports 443 and 853. Unbound resolver. pfBlockerNG-devel for DNSBL and IP reputation. Segmentation expanded to 6 VLANs with default-deny inter-VLAN |
+| **Late 2025 / Early 2026** | Second Mullvad tunnel (NYC) in a `VPN_FAILOVER` gateway group. Suricata IDS across 5 interfaces with ET Open. Full firewall rule audit and naming standardization |
+| **Spring 2026** | Tailscale subnet routing for remote admin. R6400 retired, UniFi U7 Lite adopted. Mac Mini M4 added as 24/7 Docker host. VPN migrated from US to EU exits (Sweden + Frankfurt) |
 
 ---
 
@@ -115,12 +131,12 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 </tr>
 <tr>
 <td colspan="3" align="center">
-☠️ <b>7. Total kill — both tunnels down = traffic dropped.</b> No fallback. No silent failure.
+☠️ <b>7. Total kill. Both tunnels down = traffic dropped.</b> No fallback. No silent failure.
 </td>
 </tr>
 </table>
 
-> 🟢 **VLAN 50 is the only exception** — intentionally outside the VPN for emergency admin access when something is broken and you need to reach the firewall directly.
+> 🟢 **VLAN 50 is the only exception**. Intentionally outside the VPN for emergency admin access when something is broken and you need to reach the firewall directly.
 
 ---
 
@@ -201,15 +217,25 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 
 ## ⚠️ Known limitations
 
-- **Single firewall = single point of failure** — no HA pair, acceptable trade-off for home
-- **Guest VLAN tagging in progress** — primary SSID up, guest SSID + trunk port reconfig pending
-- **Suricata in alert-only mode** — tuning false positives before flipping to block
+- **Single firewall = single point of failure**. No HA pair, acceptable trade-off for home
+- **Guest VLAN tagging in progress**. Primary SSID up, guest SSID + trunk port reconfig pending
+- **Suricata in alert-only mode**. Tuning false positives before flipping to block
+
+---
+
+## 👤 About the builder
+
+System Administrator and Network Engineer with 7+ years across healthcare, education, and MSP environments. Skilled in Active Directory, Intune, pfSense, HIPAA compliance, and zero-trust thinking.
+
+This homelab is where I keep hands-on networking skills sharp outside the day job, and where ideas (default-deny segmentation, verifiable zero-leak defaults, separation of firewall vs application duties) get tested before they show up in production thinking.
+
+More projects and writeups: [ajayangdembe.com](https://www.ajayangdembe.com)
 
 ---
 
 ## 📜 License
 
-Released under [Creative Commons Attribution 4.0 (CC BY 4.0)](LICENSE). Use it, fork it, build on it — just credit the source.
+Released under [Creative Commons Attribution 4.0 (CC BY 4.0)](LICENSE). Use it, fork it, build on it. Just credit the source.
 
 ---
 
