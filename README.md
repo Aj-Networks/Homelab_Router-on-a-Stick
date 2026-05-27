@@ -97,33 +97,6 @@ How this lab grew, one layer at a time. Full changelog in [`CHANGELOG.md`](CHANG
   <img src="diagrams/network-topology.png" alt="Network topology" width="100%"/>
 </p>
 
-**Data flow (top to bottom):**
-
-```text
-        ┌─────────┐
-        │   ISP   │
-        └────┬────┘
-             │  WAN  (igb0)
-        ┌────▼────────┐
-        │   pfSense   │  routing · NAT · firewall · VPN
-        │  Protectli  │  Suricata IDS · pfBlockerNG
-        └────┬────────┘
-             │  Trunk (igb1, 802.1Q)
-        ┌────▼────────┐
-        │   GS308E    │  VLAN tagging
-        └─┬──┬──┬──┬──┘
-          │  │  │  └── port 8 → VLAN 50 mgmt
-          │  │  └───── port 6,7 → VLAN 40 lab
-          │  └──────── port 4,5 → VLAN 20 IoT
-          └─────────── port 2,3 → VLAN 10 trusted
-                         ↓
-                   ┌──────────┐
-                   │ Wi-Fi AP │  UniFi U7 Lite
-                   │ Mac Mini │  Docker host
-                   │ Wired PC │  trusted clients
-                   └──────────┘
-```
-
 ---
 
 ## 🔒 Privacy layers (the kill switch)
@@ -159,28 +132,6 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 </p>
 
 **Subnet convention:** third octet matches VLAN ID. Logs read at a glance.
-
-```text
-┌─ VLAN 10 ─ 10.10.10.0/24 ─ trusted ───┐
-│  laptops · phones · UniFi mgmt        │  VPN
-└────────────────────────────────────────┘
-
-┌─ VLAN 20 ─ 10.10.20.0/24 ─ IoT ───────┐
-│  printers · smart bulbs · cameras     │  VPN
-└────────────────────────────────────────┘
-
-┌─ VLAN 30 ─ 10.10.30.0/24 ─ guest ─────┐
-│  visitor Wi-Fi · isolated from LAN    │  VPN
-└────────────────────────────────────────┘
-
-┌─ VLAN 40 ─ 10.10.40.0/24 ─ CCNA lab ──┐
-│  Cisco 3560 · 1900 · console traffic  │  VPN
-└────────────────────────────────────────┘
-
-┌─ VLAN 50 ─ 10.10.50.0/24 ─ mgmt ──────┐
-│  emergency admin · direct WAN egress  │  NO VPN
-└────────────────────────────────────────┘
-```
 
 ---
 
