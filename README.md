@@ -64,6 +64,18 @@
 
 ---
 
+## 🗺 Roadmap
+
+| Item | Status |
+|---|---|
+| AP hardware upgrade | ✅ Done (U7 Lite, May 2026) |
+| Guest VLAN tagging (real VLAN 30) | 🟡 In progress |
+| AdGuard Home (network-wide ad/tracker filter) | 🔵 Under review |
+| Centralized syslog server | 🔵 Exploring |
+| Switch port hardening | ⚪ Planned |
+
+---
+
 ## 📈 Lab evolution
 
 How this lab grew, one layer at a time. Full changelog in [`CHANGELOG.md`](CHANGELOG.md).
@@ -200,18 +212,6 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 - ✅ VPN failover (primary down → secondary promoted, no dropped traffic)
 - ✅ Inter-VLAN isolation (cross-VLAN pings blocked)
 - ✅ Kill switch (both tunnels down → all traffic blocked, no WAN fallback)
-
----
-
-## 🗺 Roadmap
-
-| Item | Status |
-|---|---|
-| AP hardware upgrade | ✅ Done (U7 Lite, May 2026) |
-| Guest VLAN tagging (real VLAN 30) | 🟡 In progress |
-| AdGuard Home (network-wide ad/tracker filter) | 🔵 Under review |
-| Centralized syslog server | 🔵 Exploring |
-| Switch port hardening | ⚪ Planned |
 
 ---
 
