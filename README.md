@@ -12,8 +12,19 @@ Nothing enterprise-grade, just a small lab where I can break things, learn from 
 |---|---|
 | Protectli FW6E (i7, 16GB RAM) | Firewall / Router, pfSense 2.8.1 |
 | Netgear GS308E v4 | Managed switch, 802.1Q trunk |
-| Netgear R6400 | Wi-Fi access point, AP mode only (see [Known Limitations](#known-limitations)) |
+| ~~Netgear R6400~~ | Replaced by UniFi U7 Lite (see [Recent Updates](#recent-updates)) |
+| UniFi U7 Lite | Wi-Fi 7 access point, managed by UniFi controller on Mac Mini |
 | Cisco Catalyst 3560 + Cisco 1900 | Lab gear, isolated on VLAN 40 |
+| Apple Mac Mini M4 | 24/7 Docker host for self-hosted services (UniFi controller, future AdGuard, NAS, AI stack) |
+
+---
+
+## Recent Updates
+
+| Date | Change | Why |
+|---|---|---|
+| 2026-05 | Replaced R6400 with UniFi U7 Lite | R6400's AP-mode firmware bugs (radio toggle stuck off) and no real per-SSID VLAN tagging. U7 Lite gives proper VLAN-tagged SSIDs, stable AP operation, and a UniFi controller for centralized management |
+| 2026-05 | Added Mac Mini M4 as 24/7 Docker host | Centralized place to run UniFi controller, future AdGuard, Vaultwarden, NAS, AI stack. Keeps the firewall doing one job (firewalling) |
 
 ---
 
@@ -139,17 +150,18 @@ Homelab_Router-on-a-Stick/
 |---|---|---|
 | Tailscale remote access | Done | Subnet locked to VLAN 10, tag-based ACL with default-deny, April 2026 |
 | Suricata IDS | Done | Deployed on pfSense 2.8.1 alongside pfBlockerNG-devel |
-| AP hardware upgrade | On hold | Not planned right now, may revisit later with a VLAN-aware AP |
-| Guest rate limiting | On hold | Deferred, R6400 hardware doesn't support VLAN-aware SSIDs |
-| Centralized logging | Exploring | Syslog server for firewall and IDS alerts |
+| AP hardware upgrade | Done | UniFi U7 Lite acquired and adopted May 2026, see [Recent Updates](#recent-updates) |
+| Guest VLAN tagging (real VLAN 30 isolation) | In progress | U7 Lite supports it, primary SSID up, guest SSID + trunk port reconfig is the next step |
+| AdGuard Home for network-wide ad/tracker filtering | Actively under review | Plan is to run in Docker on Mac Mini, pfSense DHCP would hand out AdGuard IP as DNS to all clients |
+| Centralized logging | Exploring | Syslog server for firewall and IDS alerts, candidate to also live on the Mac Mini |
 | Switch port hardening | Planned | Move unused GS308E ports off VLAN 1 native into a dead VLAN |
 
 ---
 
 ## Known Limitations
 
-**Guest Wi-Fi isn't fully separated yet.**
-The R6400 can't do 802.1Q tagging, so the guest SSID lands on VLAN 10 with trusted devices. AP-level client isolation is enabled, but that's not the same as real VLAN separation. This is the biggest gap right now.
+**Guest Wi-Fi separation, fix in progress.**
+Historically the R6400 could not do 802.1Q tagging, so the guest SSID landed on VLAN 10 with trusted devices behind AP-level client isolation. The new UniFi U7 Lite (May 2026) supports per-SSID VLAN tagging. Primary SSID is up on VLAN 10; guest SSID on VLAN 30 with the GS308E port 3 reconfigured to a trunk is the next step.
 
 **VLAN 40 is noisy when active.**
 Cisco lab gear throws a lot of protocol traffic (CDP, STP, etc.). Suricata is now enabled on VLAN 40 in alert-only mode. Lab gear is currently powered down so no tuning is needed yet, when lab work resumes, observed Cisco-protocol SIDs will be added to a suppression list scoped to VLAN 40. VLAN 40 remains fully isolated by firewall rules either way.

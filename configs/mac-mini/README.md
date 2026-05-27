@@ -31,20 +31,22 @@ Reservation lives in **pfSense > Services > DHCP Server > VLAN10_USERS > Static 
 | Remote Login (SSH) enabled for admin user | Done. See [`remote-access.md`](remote-access.md) |
 | Verified remote access from Windows PC via RealVNC Viewer + PowerShell SSH | Done |
 | DHCP reservation in pfSense pinning Mac to `10.10.10.250` | Done |
+| UniFi Network Application installed natively, adopted the U7 Lite AP (May 2026) | Done |
 
 ## Coming next
 
 Planned phases. Each becomes its own subdoc when built, not before.
 
-| Phase | File (not yet created) | Topic |
-|---|---|---|
-| Docker | `docker.md` | Install Docker Desktop, configure autostart, allocate resources |
-| UniFi controller | `services/unifi-controller.md` | Container for managing the UAP-AC-PRO (replaces R6400) |
-| Vaultwarden | `services/vaultwarden.md` | Self-hosted Bitwarden, password vault for lab + personal |
-| AI stack | `services/ai-stack.md` | Ollama / Open WebUI / local LLM containers |
-| NAS | `services/nas.md` | Time Machine target + SMB share for the household |
-| Tailscale | extend `remote-access.md` | Remote-from-anywhere overlay network |
-| Backup | `backup.md` | Time Machine policy, container volume backup, restore drills |
+| Phase | File (not yet created) | Status | Topic |
+|---|---|---|---|
+| Docker Desktop install | `docker.md` | Pending | Container runtime for everything below |
+| UniFi controller containerized | `services/unifi-controller.md` | Pending migration | Move from native macOS install to Docker container for restart/backup discipline |
+| **AdGuard Home** | `services/adguard.md` | **Actively under review** | Network-wide DNS-based ad/tracker filtering, per-client profiles, query logs. Plan: container on Mac Mini, pfSense DHCP hands out Mac's IP as DNS to all clients |
+| Vaultwarden | `services/vaultwarden.md` | Backlog | Self-hosted Bitwarden, password vault for lab + personal |
+| AI stack | `services/ai-stack.md` | Backlog | Ollama / Open WebUI / local LLM containers |
+| NAS | `services/nas.md` | Backlog | Time Machine target + SMB share for the household |
+| Tailscale | extend `remote-access.md` | Backlog | Remote-from-anywhere overlay network |
+| Backup | `backup.md` | Backlog | Time Machine policy, container volume backup, restore drills |
 
 ## Related docs
 

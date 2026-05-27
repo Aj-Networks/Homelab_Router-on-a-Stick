@@ -1,5 +1,7 @@
 # Netgear R6400 - AP setup and recovery
 
+> **SUPERSEDED.** The R6400 was replaced by a UniFi U7 Lite in May 2026. This doc is kept for historical reference and in case the R6400 is ever pressed back into service as a fallback AP.
+
 The R6400 runs in **AP mode only** (routing/NAT/DHCP disabled, pfSense owns those). This doc is the restore procedure when a factory reset is needed.
 
 ## Target state
