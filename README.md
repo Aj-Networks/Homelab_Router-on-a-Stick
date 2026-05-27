@@ -65,14 +65,11 @@
 
 ## 🧭 Network architecture
 
-<table>
-<tr>
-<td width="48%" valign="top">
-<img src="diagrams/network-topology.png" alt="Network topology" width="100%"/>
-</td>
-<td width="52%" valign="top">
+<p align="center">
+  <img src="diagrams/network-topology.png" alt="Network topology" width="85%"/>
+</p>
 
-**Data flow (top to bottom)**
+**Data flow (top to bottom):**
 
 ```text
         ┌─────────┐
@@ -98,10 +95,6 @@
                    │ Wired PC │  trusted clients
                    └──────────┘
 ```
-
-</td>
-</tr>
-</table>
 
 ---
 
@@ -133,12 +126,9 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 
 ## 🗂 VLAN & IP plan
 
-<table>
-<tr>
-<td width="48%" valign="top">
-<img src="diagrams/vlan-ip-detail.png" alt="VLAN and IP detail" width="100%"/>
-</td>
-<td width="52%" valign="top">
+<p align="center">
+  <img src="diagrams/vlan-ip-detail.png" alt="VLAN and IP detail" width="85%"/>
+</p>
 
 **Subnet convention:** third octet matches VLAN ID. Logs read at a glance.
 
@@ -163,10 +153,6 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 │  emergency admin · direct WAN egress  │  NO VPN
 └────────────────────────────────────────┘
 ```
-
-</td>
-</tr>
-</table>
 
 ---
 
