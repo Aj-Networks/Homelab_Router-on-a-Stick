@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏠 Homelab — pfSense Router-on-a-Stick
+# 🏠 Homelab - pfSense Router-on-a-Stick
 
 **A privacy-first home network built from off-the-shelf gear.**
 *6 VLANs · dual VPN failover · layered kill switch · zero leaks*
