@@ -13,14 +13,16 @@ Apple Silicon home server running 24/7 as the lab's Docker host, remote-manageab
 
 ## Network placement
 
-| Item | Current | Target |
-|---|---|---|
-| VLAN | 10 (Users) - temporary | 20 (Servers / IoT) once unmanaged 5-port switch (TP-Link TL-SG105) is in place behind GS308E port 5 |
-| MAC address | `xx:xx:xx:xx:xx:xx` (in password manager / pfSense reservation, not in this repo) | n/a |
-| IP | `10.10.10.250` (DHCP reservation in pfSense, VLAN10_USERS tab) | `10.10.20.10` once moved to VLAN 20 |
-| Hostname | `mac-mini-home` | same |
+| Item | Value |
+|---|---|
+| VLAN | 10 Trusted (locked: dedicated GS308E port 4 = MAC-MINI) |
+| MAC address | `xx:xx:xx:xx:xx:xx` (in password manager / pfSense reservation, not in this repo) |
+| IP | `10.10.10.250` (DHCP reservation in pfSense, VLAN10_USERS tab) |
+| Hostname | `mac-mini-home` |
 
-Reservation lives in **pfSense > Services > DHCP Server > VLAN10_USERS > Static Mappings**. When the Mac moves to VLAN 20, delete this reservation and recreate under the VLAN20 tab with IP `10.10.20.10`.
+Reservation lives in **pfSense > Services > DHCP Server > VLAN10_USERS > Static Mappings**.
+
+> The earlier plan to migrate the Mac Mini to VLAN 20 via a TP-Link TL-SG105 chain behind port 5 is **shelved**. Part 1 locked the Mac on VLAN 10 with its own dedicated GS308E port. Revisit if and when a VLAN 20 server tier is formally split out.
 
 ## Current state
 
