@@ -27,3 +27,6 @@ screenshots/
 .claude/
 CLAUDE.md
 .local-notes.md
+
+# Local-only one-click utility scripts (network hygiene helpers)
+keep_local/
