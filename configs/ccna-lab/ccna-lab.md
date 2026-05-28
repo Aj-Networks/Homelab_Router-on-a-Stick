@@ -8,8 +8,8 @@ Cisco gear configuration for hands-on CCNA practice, integrated with the home la
 
 | Device | Role | Console port | Uplink |
 |---|---|---|---|
-| Cisco Catalyst 3560 (`SW1`) | Layer 2/3 switch | RJ-45 (light blue), 9600 8-N-1 | GS308E port 6 (access, VLAN 40) |
-| Cisco 1900 ISR (`R1`) | Router | RJ-45 (light blue), 9600 8-N-1 | GS308E port 7 (access, VLAN 40) |
+| Cisco Catalyst 3560 (`SW1`) | Layer 2/3 switch | RJ-45 (light blue), 9600 8-N-1 | GS308E port 7 (SW1-CATALYST, access VLAN 40) |
+| Cisco 1941 ISR (`R1`) | Router | RJ-45 (light blue), 9600 8-N-1 | Plugs into SW1 directly (Cisco-to-Cisco), no GS308E port |
 
 ---
 
@@ -18,13 +18,12 @@ Cisco gear configuration for hands-on CCNA practice, integrated with the home la
 ```
 [Internet via pfSense (VLAN 40 → VPN_FAILOVER)]
                 |
-         GS308E port 6 / 7  (access mode, VLAN 40)
-              |        |
-        [SW1 3560]  [R1 1900]
-              |        |
-              | (trunk or routed link, varies per phase)
-              |
-        [Lab Laptop on Fa0/3]
+         GS308E port 7  (SW1-CATALYST, access VLAN 40)
+                |
+            [SW1 3560]
+            /        \
+       [R1 1941]   [Lab Laptop on Fa0/3]
+       (Cisco-to-Cisco link)
 ```
 
 ---
@@ -59,7 +58,7 @@ Static IPs sit below the DHCP pool to avoid conflicts.
 
 ### Lab-internal VLANs (live only inside the Cisco gear)
 
-To prevent any mental confusion with home VLAN IDs (1, 10, 20, 30, 40, 50), CCNA-lab VLANs use the 110-series. Tags are stripped at the GS308E uplink (access-mode port 6/7), so lab VLANs never leak to the home network.
+To prevent any mental confusion with home VLAN IDs (1, 10, 20, 30, 40, 50), CCNA-lab VLANs use the 110-series. Tags are stripped at the GS308E uplink (access-mode port 7), so lab VLANs never leak to the home network.
 
 | Lab VLAN | Name | Suggested subnet | Notes |
 |---|---|---|---|
@@ -194,7 +193,7 @@ One dedicated laptop on one access port covers ~75% of CCNA hands-on topics. Mul
 |---|---|
 | `copy run start` after every successful change | Otherwise config evaporates on reboot |
 | Save a `show run` text dump to `configs/ccna-lab/show-runs/<device>-<phase>.txt` after each phase | Restore reference. Strip passwords before committing. |
-| Cisco ports plug only into GS308E port 6 or 7 | Avoid bridging the lab into trusted VLANs |
+| SW1 uplinks only to GS308E port 7 (SW1-CATALYST). R1 plugs into SW1 directly. | Avoid bridging the lab into trusted VLANs |
 | Never run a Cisco DHCP server on `10.10.40.0/24` | pfSense DHCP owns this range; conflict would break VLAN 40 |
 | Lab VLANs 110/120/130 stay inside the Cisco gear | Tags get stripped at the GS308E access-mode uplink |
 | Power off Cisco gear when not actively learning | Reduces VLAN 40 noise (CDP/STP), saves power |

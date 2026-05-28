@@ -25,13 +25,13 @@ Isolated on VLAN 40 of the home lab so nothing the Cisco gear does can leak into
 
 ## Network Placement
 
-Both Cisco devices uplink into the home lab's GS308E switch on access ports tagged for VLAN 40. The lab VLAN is firewall-isolated from the rest of the home network and only allowed egress is via the VPN failover gateway.
+SW1 uplinks into the home lab's GS308E on port 7 (SW1-CATALYST), access mode VLAN 40. R1 plugs into SW1 directly (Cisco-to-Cisco), not into the GS308E. The lab VLAN is firewall-isolated from the rest of the home network and only allowed egress is via the VPN failover gateway.
 
 | Device | Home VLAN | Mgmt IP | Notes |
 |---|---|---|---|
 | pfSense (gateway) | 40 | 10.10.40.1/24 | Default route for the lab |
-| `SW1` (3560) | 40 | 10.10.40.2/24 | Uplinked via GS308E port 6 |
-| `R1` (1900) | 40 | 10.10.40.3/24 | Uplinked via GS308E port 7 |
+| `SW1` (3560) | 40 | 10.10.40.2/24 | Uplinked via GS308E port 7 (SW1-CATALYST) |
+| `R1` (1941) | 40 | 10.10.40.3/24 | Plugs into SW1 directly (Cisco-to-Cisco). No GS308E port. |
 
 Inside the Cisco gear, lab-internal VLANs (110/120/130) carry the actual CCNA exercises. Those subnets never leave the Cisco devices.
 
