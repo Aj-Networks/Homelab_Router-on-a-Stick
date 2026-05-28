@@ -7,6 +7,25 @@ All notable changes to this project are documented here.
 ## [Phase 3], In Progress
 
 ### Done
+- GS308E Part 1 port allocation LOCKED (2026-05-27). Documented in `configs/switch-port-map.md` with full Native VLAN + Tagged VLAN IDs format. Layout:
+  - Port 1 UPLINK-PFSENSE (trunk, all VLANs)
+  - Port 2 AP-TRUNK (U7 Lite, native 10, tagged 30 + 50)
+  - Port 3 GS305-CHAIN (GS305 unmanaged downstream, VLAN 10)
+  - Port 4 MAC-MINI (dedicated VLAN 10)
+  - Port 5 PERSONAL-PC (dedicated VLAN 10)
+  - Port 6 PRINTER (VLAN 20)
+  - Port 7 SW1-CATALYST (Cisco lab uplink, VLAN 40; R1 plugs into SW1 directly)
+  - Port 8 WAN-ESCAPE (VLAN 50)
+- Cascaded the locked layout into `docs/LAB_TECHNICAL_GUIDE.md` §9.1/§9.2, `configs/ccna-lab/README.md`, `configs/ccna-lab/ccna-lab.md`, `configs/mac-mini/README.md` (Mac VLAN 20 migration plan shelved).
+- AP VLAN-tagged Wi-Fi root cause found (2026-05-27): the U7 Lite was tagging frames correctly all along. The downstream Netgear GS305 (unmanaged) in the path was stripping 802.1Q tags. Confirmed via tcpdump on the AP eth0 showing `vlan 30` tagged frames egressing the wire. Resolved by moving the AP cable to a direct GS308E port. Full session log in `keep_local/ap.md`.
+
+### Pending (Part 1 close-out)
+- Move native VLAN on Port 1 from `1` -> `999` (black-hole) for trunk hardening
+- Label all 8 ports in the GS308E UI matching `switch-port-map.md`
+- Export GS308E config and commit to repo for backup
+- Physically execute the locked layout (move cables to match the port table)
+
+### Done (earlier in Phase 3)
 - Tailscale remote access, advertised routes for `10.10.1.0/24` and `10.10.10.0/24` configured and tested (March 2026)
 - Suricata IDS deployed on pfSense 2.8.1
 - pfBlockerNG-devel deployed for IP/DNS blocking
