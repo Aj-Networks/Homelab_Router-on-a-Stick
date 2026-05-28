@@ -284,20 +284,22 @@ All internal subnets are drawn from **RFC 1918** ("Address Allocation for Privat
 
 ### 9.1 Switch port map
 
-| Port | Mode | PVID (untagged) | Tagged VLANs | Connected device |
-|---|---|---|---|---|
-| 1 | Trunk | 1 | 10, 20, 30, 40, 50 | pfSense `igb1` (Port 2 on FW6E) |
-| 2 | Access | 10 | n/a | Trusted PC |
-| 3 | Access | 10 | n/a | Netgear R6400 AP |
-| 4 | Access | 20 | n/a | Network printer |
-| 5 | Access | 20 | n/a | Smart device |
-| 6 | Access | 40 | n/a | Cisco Catalyst 3560 |
-| 7 | Access | 40 | n/a | Cisco 1900 router |
-| 8 | Access | 50 | n/a | Management spare |
+| Port | Name | Mode | Native VLAN | Tagged VLAN IDs | Connected device |
+|---|---|---|---|---|---|
+| 1 | UPLINK-PFSENSE | Trunk | 1 (→ 999 planned) | 10 Trusted, 20 IoT, 30 Guest, 40 Lab, 50 Mgmt | pfSense `igb1` (Port 2 on FW6E) |
+| 2 | AP-TRUNK | Trunk | 10 Trusted | 30 Guest, 50 Mgmt | Ubiquiti U7 Lite AP |
+| 3 | GS305-CHAIN | Access | 10 Trusted | - | Netgear GS305 (unmanaged) → Kali laptop + spare |
+| 4 | MAC-MINI | Access | 10 Trusted | - | Mac Mini M4 |
+| 5 | PERSONAL-PC | Access | 10 Trusted | - | Personal PC |
+| 6 | PRINTER | Access | 20 IoT | - | Printer |
+| 7 | SW1-CATALYST | Access | 40 Lab | - | Cisco Catalyst 3560 (R1 1941 plugs into SW1 directly) |
+| 8 | WAN-ESCAPE | Access | 50 Mgmt | - | Wired direct-WAN escape, unplugged when idle |
+
+> Authoritative source is [`configs/switch-port-map.md`](../configs/switch-port-map.md). Keep these in sync.
 
 ### 9.2 What "PVID" means
 
-The **Port VLAN Identifier (PVID)** is the VLAN ID assigned to untagged frames arriving on an access port. When a PC plugs into Port 2 and sends a normal Ethernet frame, the switch stamps it with VLAN 10 before forwarding. On the way back out the access port, the tag is stripped, the PC never sees it.
+The **Port VLAN Identifier (PVID)**, shown here as **Native VLAN**, is the VLAN ID assigned to untagged frames arriving on a port. When the Mac Mini plugs into Port 4 (MAC-MINI) and sends a normal Ethernet frame, the switch stamps it with VLAN 10 before forwarding. On the way back out the access port, the tag is stripped, the Mac never sees it.
 
 ### 9.3 Trunk-port behaviour
 
@@ -336,11 +338,11 @@ pfSense runs a **DHCP server** on each VLAN sub-interface. When a device boots, 
 | VLAN | DHCP range | Reserved |
 |---|---|---|
 | 1 | 10.10.1.10-10.10.1.99 | .1 (gateway), .100 (switch static) |
-| 10 | 10.10.10.10-10.10.10.245 | .254 (R6400 static), .246-.253 future static |
+| 10 | 10.10.10.10-10.10.10.200 | .1 (gateway), .254 (AP static), .201-.253 future static |
 | 20 | 10.10.20.10-10.10.20.254 | .1 |
-| 30 | 10.10.30.10-10.10.30.254 | .1 |
+| 30 | 10.10.30.10-10.10.30.200 | .1 (gateway), .201-.254 future static |
 | 40 | 10.10.40.10-10.10.40.254 | .1 |
-| 50 | 10.10.50.10-10.10.50.254 | .1 |
+| 50 | 10.10.50.10-10.10.50.200 | .1 (gateway), .201-.254 future static |
 
 ### 10.3 Static mappings
 
