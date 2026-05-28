@@ -35,11 +35,11 @@ Interface, subnet, and purpose map for the Router-on-a-Stick topology. All VLANs
 | VLAN | Range | Notes |
 |---|---|---|
 | VLAN 1 | 10.10.1.10-10.10.1.99 | Switch management only |
-| VLAN 10 | 10.10.10.10-10.10.10.245 | .254 reserved for AP static mapping |
+| VLAN 10 | 10.10.10.10-10.10.10.200 | .201-.254 reserved (static / future use, .254 = AP) |
 | VLAN 20 | 10.10.20.10-10.10.20.254 | |
-| VLAN 30 | 10.10.30.10-10.10.30.254 | |
+| VLAN 30 | 10.10.30.10-10.10.30.200 | .201-.254 reserved (static / future use) |
 | VLAN 40 | 10.10.40.10-10.10.40.254 | |
-| VLAN 50 | 10.10.50.10-10.10.50.254 | |
+| VLAN 50 | 10.10.50.10-10.10.50.200 | .201-.254 reserved (static / future use) |
 
 ---
 
