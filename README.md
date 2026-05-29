@@ -2,6 +2,8 @@
 
 # 🏠 Homelab - pfSense Router-on-a-Stick
 
+📖 [Known limitations and lessons learned](docs/LIMITATIONS.md)
+
 **A privacy-first home network built from off-the-shelf gear.**
 *6 VLANs · dual VPN failover · layered kill switch · zero leaks*
 
@@ -16,6 +18,18 @@
 
 > [!IMPORTANT]
 > 📜 **Free to use, fork, and learn from.** If this repo helps you and you build on it or share it, a credit back is appreciated. Full terms in the [LICENSE](LICENSE).
+
+---
+
+## 🆕 Recent updates
+
+| Date | Change |
+|---|---|
+| **2026-05-27** | Attempted native VLAN 999 + dedicated mgmt VLAN hardening. Hit GS308E v4 hardware limit ([details](docs/LIMITATIONS.md)). Closed Part 1 at 9/10 of enterprise hardening; the 1-point gap is hardware-bounded. |
+| **2026-05-27** | GS308E port allocation **locked** at v1.0 (full Part 1 layout). See [switch-port-map.md](configs/switch-port-map.md). |
+| **2026-05** | Replaced R6400 with **UniFi U7 Lite** (WiFi 7, VLAN-tagged SSIDs, stable AP mode) |
+| **2026-05** | Added **Mac Mini M4** as 24/7 Docker host for self-hosted services |
+| **2026-05** | Migrated VPN from US exits (CHI/NYC) to EU exits (Sweden/Frankfurt) |
 
 ---
 
@@ -57,25 +71,16 @@
 
 ---
 
-## 🆕 Recent updates
-
-| Date | Change |
-|---|---|
-| **2026-05** | Replaced R6400 with **UniFi U7 Lite** (WiFi 7, VLAN-tagged SSIDs, stable AP mode) |
-| **2026-05** | Added **Mac Mini M4** as 24/7 Docker host for self-hosted services |
-| **2026-05** | Migrated VPN from US exits (CHI/NYC) to EU exits (Sweden/Frankfurt) |
-
----
-
 ## 🗺 Roadmap
 
 | Item | Status |
 |---|---|
 | AP hardware upgrade | ✅ Done (U7 Lite, May 2026) |
-| Guest VLAN tagging (real VLAN 30) | 🟡 In progress |
+| Guest VLAN tagging (real VLAN 30) | ✅ Done (May 2026, via U7 Lite trunk to GS308E) |
+| Switch port allocation + labels (locked Part 1 layout) | ✅ Done (May 2026) |
+| Native VLAN 999 + dedicated mgmt VLAN | ⛔ Hardware-blocked, see [LIMITATIONS.md](docs/LIMITATIONS.md) |
 | AdGuard Home (network-wide ad/tracker filter) | 🔵 Under review |
 | Centralized syslog server | 🔵 Exploring |
-| Switch port hardening | ⚪ Planned |
 
 ---
 
@@ -172,8 +177,10 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 ## ⚠️ Known limitations
 
 - **Single firewall = single point of failure**. No HA pair, acceptable trade-off for home
-- **Guest VLAN tagging in progress**. Primary SSID up, guest SSID + trunk port reconfig pending
 - **Suricata in alert-only mode**. Tuning false positives before flipping to block
+- **GS308E v4 hardware ceiling**. No Management VLAN feature, no SNMP, no SSH, no ACLs. Caps the network at 9/10 enterprise-grade. Full post-mortem and reattempt criteria in [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md).
+
+Full catalogue with post-mortem write-ups: [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md)
 
 ---
 
