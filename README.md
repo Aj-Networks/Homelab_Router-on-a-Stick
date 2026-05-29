@@ -25,6 +25,7 @@
 
 | Date | Change |
 |---|---|
+| **2026-05-27** | Enabled **dedicated OOB management port** on Protectli Port 3 (igb2, `172.16.99.0/24`). Direct ethernet recovery path that survives any LAN/trunk misconfiguration. Enterprise pattern. |
 | **2026-05-27** | Attempted native VLAN 999 + dedicated mgmt VLAN hardening. Hit GS308E v4 hardware limit ([details](docs/LIMITATIONS.md)). Closed Part 1 at 9/10 of enterprise hardening; the 1-point gap is hardware-bounded. |
 | **2026-05-27** | GS308E port allocation **locked** at v1.0 (full Part 1 layout). See [switch-port-map.md](configs/switch-port-map.md). |
 | **2026-05** | Replaced R6400 with **UniFi U7 Lite** (WiFi 7, VLAN-tagged SSIDs, stable AP mode) |
@@ -78,6 +79,7 @@
 | AP hardware upgrade | ✅ Done (U7 Lite, May 2026) |
 | Guest VLAN tagging (real VLAN 30) | ✅ Done (May 2026, via U7 Lite trunk to GS308E) |
 | Switch port allocation + labels (locked Part 1 layout) | ✅ Done (May 2026) |
+| Dedicated OOB management port (Protectli Port 3) | ✅ Done (May 2026, `172.16.99.0/24`) |
 | Native VLAN 999 + dedicated mgmt VLAN | ⛔ Hardware-blocked, see [LIMITATIONS.md](docs/LIMITATIONS.md) |
 | AdGuard Home (network-wide ad/tracker filter) | 🔵 Under review |
 | Centralized syslog server | 🔵 Exploring |
