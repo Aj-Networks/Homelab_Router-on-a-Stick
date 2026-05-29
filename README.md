@@ -9,10 +9,13 @@
 ![UniFi](https://img.shields.io/badge/UniFi-U7%20Lite-blue?logo=ubiquiti&logoColor=white)
 ![Mullvad](https://img.shields.io/badge/VPN-Mullvad%20WireGuard-yellow)
 ![Status](https://img.shields.io/badge/Lab-Active-brightgreen)
-![License](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 ![Last commit](https://img.shields.io/github/last-commit/Aj-Networks/Homelab_Router-on-a-Stick)
 
 </div>
+
+> [!IMPORTANT]
+> 📜 **Free to use, fork, and learn from.** If this repo helps you and you build on it or share it, a credit back is appreciated. Full terms in the [LICENSE](LICENSE).
 
 ---
 
@@ -184,9 +187,16 @@ More projects and writeups: [ajayangdembe.com](https://www.ajayangdembe.com)
 
 ---
 
-## 📜 License
+## 📄 License and Attribution
 
-Released under [Creative Commons Attribution 4.0 (CC BY 4.0)](LICENSE). Use it, fork it, build on it. Just credit the source.
+**MIT License.** See [LICENSE](LICENSE) for the full text.
+
+> [!CAUTION]
+> ✅ **You CAN:** use, fork, study, adapt, and build on this repo for learning, teaching, your own use, or commercial work.
+>
+> ❌ **You CANNOT:** strip attribution and republish this repo (or substantial parts of it) as your own original creation.
+>
+> 📌 **If you reference or reuse content from this repo, you MUST credit the original** and include the MIT copyright notice. Link back to https://github.com/Aj-Networks/Homelab_Router-on-a-Stick. This is legally required by the MIT License terms.
 
 ---
 
