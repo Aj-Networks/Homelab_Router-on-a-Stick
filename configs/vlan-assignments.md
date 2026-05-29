@@ -22,8 +22,9 @@ Interface, subnet, and purpose map for the Router-on-a-Stick topology. All VLANs
 
 | Port | Interface | Purpose | State |
 |---|---|---|---|
-| Port 2 | igb1 | n/a | Trunk (active) |
-| Port 3 | igb2 | Out-of-Band (OOB) | Named, disabled |
+| Port 1 | igb0 | WAN | Active |
+| Port 2 | igb1 | LAN (trunk to GS308E) | Trunk (active) |
+| Port 3 | igb2 | OOB_MGMT (out-of-band) | **Active** - subnet `172.16.99.0/24`, gateway `172.16.99.1`, DHCP `.10-.99`. Enterprise OOB recovery path. |
 | Port 4 | igb3 | Lab Direct | Named, disabled |
 | Port 5 | igb4 | High Availability (HA) | Named, disabled |
 | Port 6 | igb5 | Expansion | Named, disabled |
