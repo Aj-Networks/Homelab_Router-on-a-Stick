@@ -49,7 +49,8 @@ Interface, subnet, and purpose map for the Router-on-a-Stick topology. All VLANs
 | Device | MAC | IP | VLAN |
 |---|---|---|---|
 | Netgear GS308E (Switch) | n/a | 10.10.1.100 | VLAN 1 |
-| Netgear R6400 (AP) | n/a | 10.10.10.254 | VLAN 10 |
+| Ubiquiti U7 Lite (AP) | (see pfSense) | 10.10.10.254 | VLAN 10 |
+| Mac Mini M4 (UniFi controller host) | (see pfSense) | 10.10.10.250 | VLAN 10 |
 
 ---
 
