@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ## [Phase 3], In Progress
 
 ### Done
+- U7 Lite AP pinned to static `10.10.10.254` via pfSense DHCP reservation on VLAN10_USERS (2026-05-29). Hostname `u7-lite-ap`. Mac Mini already at static `10.10.10.250`. Both within the `.201-.254` reserved range.
 - OOB management port enabled on Protectli Port 3 / igb2 (2026-05-27). Subnet `172.16.99.0/24`, gateway `172.16.99.1`, DHCP `.10-.99`. Plug a laptop into Port 3 to get direct WebUI access bypassing the switch and the trunk entirely. New priority-one recovery path.
 - VLAN 999 + dedicated management VLAN hardening attempted and abandoned (2026-05-27). GS308E v4 lacks a configurable Management VLAN feature per the official NETGEAR manual. Full post-mortem in `docs/LIMITATIONS.md`. Lab stays at 9/10 enterprise grade with the 1-point gap documented as hardware-bounded.
 - GS308E Part 1 port allocation LOCKED (2026-05-27). Documented in `configs/switch-port-map.md` with full Native VLAN + Tagged VLAN IDs format. Layout:
