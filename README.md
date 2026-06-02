@@ -25,12 +25,14 @@
 
 | Date | Change |
 |---|---|
+| **2026-06-01** | VPN migrated to dual USA exits (`USA_1` active, `USA_2` failover). `TUN_` / `PEER_` naming split. Public docs scrubbed of city-level VPN details per new global privacy rule. |
 | **2026-05-27** | Enabled **dedicated OOB management port** on Protectli Port 3 (igb2, `172.16.99.0/24`). Direct ethernet recovery path that survives any LAN/trunk misconfiguration. Enterprise pattern. |
 | **2026-05-27** | Attempted native VLAN 999 + dedicated mgmt VLAN hardening. Hit GS308E v4 hardware limit ([details](docs/LIMITATIONS.md)). Closed Part 1 at 9/10 of enterprise hardening; the 1-point gap is hardware-bounded. |
 | **2026-05-27** | GS308E port allocation **locked** at v1.0 (full Part 1 layout). See [switch-port-map.md](configs/switch-port-map.md). |
 | **2026-05** | Replaced R6400 with **UniFi U7 Lite** (WiFi 7, VLAN-tagged SSIDs, stable AP mode) |
 | **2026-05** | Added **Mac Mini M4** as 24/7 Docker host for self-hosted services |
-| **2026-05** | Migrated VPN from US exits (CHI/NYC) to EU exits (Sweden/Frankfurt) |
+| **2026-05** | Migrated VPN region (regional exits adjusted for jurisdiction and latency) |
+| **2026-06** | Migrated VPN region again, settled on dual USA exits (USA_1 active, USA_2 failover). Naming convention split: `TUN_` for the Tunnel object, `PEER_` for the Peer sub-object |
 
 ---
 
@@ -49,7 +51,7 @@
 | | |
 |---|---|
 | **VLANs** | 6 (Trusted, IoT, Guest, Lab, Mgmt, Native) |
-| **VPN tunnels** | 2 (Mullvad Sweden + Germany, auto-failover) |
+| **VPN tunnels** | 2 (Mullvad WireGuard, dual-region with automatic failover) |
 | **Kill switch layers** | 7 (NAT, DoH/DoT block, port 53 block, RFC1918 block, IPv6 block, DNS lockdown, no WAN egress NAT) |
 | **Verified zero leaks** | DNS, IP, WebRTC (ipleak.net + Mullvad Check) |
 | **Total hardware cost** | ~$1,960 |
@@ -94,10 +96,11 @@ How this lab grew, one layer at a time. Full changelog in [`CHANGELOG.md`](CHANG
 |---|---|
 | **2017-2023** | Self-taught Cisco IOS on the Catalyst 3560 PoE-8 and 1941 router. VLANs, trunking, ACLs, basic routing. CCNA self-study, no public docs from this period |
 | **Early 2024** | Acquired Protectli FW6E. pfSense 2.8.1, ISP modem to bridge mode, stateful firewall replaces consumer NAT. GS308E v4 added for 802.1Q trunking |
-| **Mid / Late 2024** | First Mullvad WireGuard tunnel (Chicago). Policy-based outbound routing per VLAN. Kill switch via zero WAN egress NAT rules |
+| **Mid / Late 2024** | First Mullvad WireGuard tunnel. Policy-based outbound routing per VLAN. Kill switch via zero WAN egress NAT rules |
 | **2025** | DoH/DoT blocking on ports 443 and 853. Unbound resolver. pfBlockerNG-devel for DNSBL and IP reputation. Segmentation expanded to 6 VLANs with default-deny inter-VLAN |
-| **Late 2025 / Early 2026** | Second Mullvad tunnel (NYC) in a `VPN_FAILOVER` gateway group. Suricata IDS across 5 interfaces with ET Open. Full firewall rule audit and naming standardization |
-| **Spring 2026** | Tailscale subnet routing for remote admin. R6400 retired, UniFi U7 Lite adopted. Mac Mini M4 added as 24/7 Docker host. VPN migrated from US to EU exits (Sweden + Frankfurt) |
+| **Late 2025 / Early 2026** | Second Mullvad tunnel added in a `VPN_FAILOVER` gateway group. Suricata IDS across 5 interfaces with ET Open. Full firewall rule audit and naming standardization |
+| **Spring 2026** | Tailscale subnet routing for remote admin. R6400 retired, UniFi U7 Lite adopted. Mac Mini M4 added as 24/7 Docker host. VPN region rebalanced for jurisdiction |
+| **Summer 2026** | VPN region rebalanced again, settled on dual USA exits chosen by latency + geographic diversity. Public docs scrubbed of city-level VPN details |
 
 ---
 

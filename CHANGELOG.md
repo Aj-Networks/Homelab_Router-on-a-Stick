@@ -7,6 +7,7 @@ All notable changes to this project are documented here.
 ## [Phase 3], In Progress
 
 ### Done
+- VPN exits migrated to dual USA (2026-06-01). Tier 1 active, Tier 2 failover. Selection: Tier 1 chosen by lowest WAN-to-endpoint latency (Diagnostics > Ping); Tier 2 chosen for geographic and peering diversity from Tier 1. Naming convention split: `TUN_` for the WireGuard Tunnel object, `PEER_` for the Peer sub-object (previously both were tagged `PEER_`). Sub-field descriptions standardized: Interface Address = `INT_USA_<N>`, Allowed IPs = `fulltunnel`. Public docs use tier numbers (`USA_1`, `USA_2`) only; exit cities are kept private per the global privacy rule. Old EU tunnels deleted in strict dependency order (DNS > Outbound NAT > Gateways > Interface assignments > Peers > Tunnels). Monitor IPs reset to canonical `1.1.1.1` (Tier 1) and `9.9.9.9` (Tier 2) post-cutover. Failover verified: disabling Tier 1 tunnel flips traffic to Tier 2 within ~30s, re-enable flips back. Zero leaks confirmed via mullvad.net/check and ipleak.net.
 - U7 Lite AP pinned to static `10.10.10.254` via pfSense DHCP reservation on VLAN10_USERS (2026-05-29). Hostname `u7-lite-ap`. Mac Mini already at static `10.10.10.250`. Both within the `.201-.254` reserved range.
 - OOB management port enabled on Protectli Port 3 / igb2 (2026-05-27). Subnet `172.16.99.0/24`, gateway `172.16.99.1`, DHCP `.10-.99`. Plug a laptop into Port 3 to get direct WebUI access bypassing the switch and the trunk entirely. New priority-one recovery path.
 - VLAN 999 + dedicated management VLAN hardening attempted and abandoned (2026-05-27). GS308E v4 lacks a configurable Management VLAN feature per the official NETGEAR manual. Full post-mortem in `docs/LIMITATIONS.md`. Lab stays at 9/10 enterprise grade with the 1-point gap documented as hardware-bounded.
@@ -69,7 +70,7 @@ All notable changes to this project are documented here.
 ### Added
 - Router-on-a-Stick topology via single 802.1Q trunk (`igb1`)
 - 6 VLANs: Native (1), Users (10), IoT (20), Guest (30), Lab (40), Management (50)
-- Dual Mullvad WireGuard tunnels, Chicago (primary) + NYC (failover)
+- Dual Mullvad WireGuard tunnels in a primary/failover gateway group
 - `VPN_FAILOVER` gateway group with automatic failover
 - Layered kill switch, manual outbound NAT with zero explicit WAN rules, DoH/DoT block, port 53 block, RFC1918 inter-VLAN isolation, IPv6 block
 - DNS locked to Mullvad resolvers through VPN tunnels, no ISP fallback
@@ -91,7 +92,7 @@ All notable changes to this project are documented here.
 
 ### Added
 - Early 2024, Acquired Protectli FW6E, initial pfSense install with basic WAN/LAN configuration
-- Later 2024, First Mullvad WireGuard tunnel (Chicago), started learning VPN enforcement and outbound NAT discipline
+- Later 2024, First Mullvad WireGuard tunnel, started learning VPN enforcement and outbound NAT discipline
 - Through 2025, Added DNS and DoH blocking, built up early kill switch rules incrementally, refined VLAN segmentation
 - Late 2025, Work transitioned into the polished Phase 2 build (dual tunnel failover, 6 VLAN topology, Tailscale, Suricata, pfBlockerNG-devel)
 
