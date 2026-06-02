@@ -87,8 +87,8 @@ pfBlockerNG auto generates floating rules to let clients reach the VIP for the b
 | VLAN30_GUEST | Yes | Client VLAN |
 | VLAN50_MGMT | Yes | Client VLAN |
 | VLAN40_LAB | No | Isolated by design |
-| VPN_CHI | No | Outbound tunnel |
-| VPN_NYC | No | Outbound tunnel |
+| INT_USA_1 | No | Outbound tunnel |
+| INT_USA_2 | No | Outbound tunnel |
 | LAN | No | Unused |
 
 ---

@@ -8,27 +8,33 @@ There are **zero explicit WAN outbound NAT rules**, this is the foundation of th
 
 ## Outbound NAT Rules
 
-### VPN_CHI (Chicago, Primary Tier 1)
+### INT_USA_1 (Tier 1, Active)
 
 | # | Interface | Source | Translation | Notes |
 |---|---|---|---|---|
-| 1 | VPN_CHI | 10.10.1.0/24 | VPN_CHI address | LAN Native > Chicago |
-| 2 | VPN_CHI | 10.10.10.0/24 | VPN_CHI address | VLAN10 Users > Chicago |
-| 3 | VPN_CHI | 10.10.20.0/24 | VPN_CHI address | VLAN20 IoT > Chicago |
-| 4 | VPN_CHI | 10.10.30.0/24 | VPN_CHI address | VLAN30 Guest > Chicago |
-| 5 | VPN_CHI | 10.10.40.0/24 | VPN_CHI address | VLAN40 Lab > Chicago |
-| 6 | VPN_CHI | 10.10.50.0/24 | VPN_CHI address | VLAN50 Management > Chicago |
+| 1 | INT_USA_1 | 10.10.1.0/24 | INT_USA_1 address | LAN Native > VPN_1 |
+| 2 | INT_USA_1 | 10.10.10.0/24 | INT_USA_1 address | VLAN10 Users > VPN_1 |
+| 3 | INT_USA_1 | 10.10.20.0/24 | INT_USA_1 address | VLAN20 IoT > VPN_1 |
+| 4 | INT_USA_1 | 10.10.30.0/24 | INT_USA_1 address | VLAN30 Guest > VPN_1 |
+| 5 | INT_USA_1 | 10.10.40.0/24 | INT_USA_1 address | VLAN40 Lab > VPN_1 |
+| 6 | INT_USA_1 | 10.10.50.0/24 | INT_USA_1 address | VLAN50 Management > VPN_1 |
 
-### VPN_NYC (New York City, Failover Tier 2)
+### INT_USA_2 (Tier 2, Failover)
 
 | # | Interface | Source | Translation | Notes |
 |---|---|---|---|---|
-| 7 | VPN_NYC | 10.10.1.0/24 | VPN_NYC address | LAN Native > NYC |
-| 8 | VPN_NYC | 10.10.10.0/24 | VPN_NYC address | VLAN10 Users > NYC |
-| 9 | VPN_NYC | 10.10.20.0/24 | VPN_NYC address | VLAN20 IoT > NYC |
-| 10 | VPN_NYC | 10.10.30.0/24 | VPN_NYC address | VLAN30 Guest > NYC |
-| 11 | VPN_NYC | 10.10.40.0/24 | VPN_NYC address | VLAN40 Lab > NYC |
-| 12 | VPN_NYC | 10.10.50.0/24 | VPN_NYC address | VLAN50 Management > NYC |
+| 7 | INT_USA_2 | 10.10.1.0/24 | INT_USA_2 address | LAN Native > VPN_2 |
+| 8 | INT_USA_2 | 10.10.10.0/24 | INT_USA_2 address | VLAN10 Users > VPN_2 |
+| 9 | INT_USA_2 | 10.10.20.0/24 | INT_USA_2 address | VLAN20 IoT > VPN_2 |
+| 10 | INT_USA_2 | 10.10.30.0/24 | INT_USA_2 address | VLAN30 Guest > VPN_2 |
+| 11 | INT_USA_2 | 10.10.40.0/24 | INT_USA_2 address | VLAN40 Lab > VPN_2 |
+| 12 | INT_USA_2 | 10.10.50.0/24 | INT_USA_2 address | VLAN50 Management > VPN_2 |
+
+### WAN (VLAN 50 escape hatch)
+
+| # | Interface | Source | Translation | Notes |
+|---|---|---|---|---|
+| 13 | WAN | 10.10.50.0/24 | WAN address | VLAN50_MGMT > WAN direct (admin escape hatch) |
 
 ---
 
@@ -36,5 +42,11 @@ There are **zero explicit WAN outbound NAT rules**, this is the foundation of th
 
 - **Manual mode is required**, Auto Outbound NAT would create WAN rules automatically, breaking the kill switch
 - **Every subnet has a rule on both tunnels**, ensures clean failover with no gap
-- **No WAN NAT rules exist**, if both VPN tunnels drop, traffic is blocked, not leaked
-- **VLAN 50 NAT rules (6 and 12) are intentionally unused**, VLAN 50 routes through WAN directly by firewall design, so these rules never match. They're only there to keep the subnet list consistent across both tunnels.
+- **No WAN NAT rules exist for client VLANs**, if both VPN tunnels drop, traffic is blocked, not leaked
+- **VLAN 50 NAT rules (6 and 12) are intentionally unused for tunnel egress**, VLAN 50 routes through WAN directly by firewall design via rule 13, so the tunnel rules never match. They're kept to keep the subnet list symmetric across both tunnels.
+
+---
+
+## Adding rules for a new tunnel
+
+When adding a third or replacement tunnel, copy the existing 6 rules from one tier, change Interface and NAT Address to the new `INT_USA_<N>`, update the Description suffix. Repeat for every VLAN subnet. Outbound NAT does NOT support gateway groups, so each VPN interface needs its own complete set of 6 rules.

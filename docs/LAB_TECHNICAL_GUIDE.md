@@ -116,8 +116,8 @@ Not required:
 |  ------------------------------------------                  |
 |  - Stateful packet filter  (pf)                              |
 |  - Manual Outbound NAT                                        |
-|  - WireGuard:    VPN_CHI  (primary)                           |
-|                  VPN_NYC  (failover)                          |
+|  - WireGuard:    INT_USA_1 (Tier 1, active)                   |
+|                  INT_USA_2 (Tier 2, failover)                 |
 |  - Gateway group: VPN_FAILOVER                                |
 |  - Unbound DNS resolver                                       |
 |  - pfBlockerNG-devel (DNSBL + IP feeds)                       |
@@ -371,8 +371,8 @@ pfSense Unbound resolver
    |  - if not: continue
    |
    |  Recursive query to upstream Mullvad resolvers
-   |     100.64.0.1  via VPN_CHI
-   |     100.64.0.2  via VPN_NYC
+   |     100.64.0.x  via INT_USA_1
+   |     100.64.0.x  via INT_USA_2
    v
 Authoritative answer → Unbound → client
 ```
@@ -397,7 +397,7 @@ Running Unbound in resolver mode (rather than forwarder mode) means clients are 
 | pfSense system DNS | Configured as Mullvad addresses only, no ISP fallback |
 | Outbound NAT | Only the VPN tunnel interfaces have NAT rules, DNS queries cannot leave via WAN |
 
-**Net effect:** there is no possible code path by which a client query reaches the ISP DNS or any non-Mullvad resolver. If a client tries to bypass with `dig @8.8.8.8` it gets blocked by the port-53 rule. If it tries DoH (DNS-over-HTTPS) on `1.1.1.1:443` it gets blocked by the DoH alias rule. If pfSense fails over to NYC, system DNS swings to the NYC Mullvad address, still encrypted, still inside the tunnel.
+**Net effect:** there is no possible code path by which a client query reaches the ISP DNS or any non-Mullvad resolver. If a client tries to bypass with `dig @8.8.8.8` it gets blocked by the port-53 rule. If it tries DoH (DNS-over-HTTPS) on `1.1.1.1:443` it gets blocked by the DoH alias rule. If pfSense fails over to Tier 2, system DNS swings to the Tier 2 Mullvad address, still encrypted, still inside the tunnel.
 
 ---
 
@@ -535,18 +535,18 @@ This lab uses **Manual** mode. There are zero NAT rules on the WAN interface. Th
 
 | # | Interface | Source | Translation |
 |---|---|---|---|
-| 1 | VPN_CHI | 10.10.1.0/24 | VPN_CHI address |
-| 2 | VPN_CHI | 10.10.10.0/24 | VPN_CHI address |
-| 3 | VPN_CHI | 10.10.20.0/24 | VPN_CHI address |
-| 4 | VPN_CHI | 10.10.30.0/24 | VPN_CHI address |
-| 5 | VPN_CHI | 10.10.40.0/24 | VPN_CHI address |
-| 6 | VPN_CHI | 10.10.50.0/24 | VPN_CHI address |
-| 7 | VPN_NYC | 10.10.1.0/24 | VPN_NYC address |
-| 8 | VPN_NYC | 10.10.10.0/24 | VPN_NYC address |
-| 9 | VPN_NYC | 10.10.20.0/24 | VPN_NYC address |
-| 10 | VPN_NYC | 10.10.30.0/24 | VPN_NYC address |
-| 11 | VPN_NYC | 10.10.40.0/24 | VPN_NYC address |
-| 12 | VPN_NYC | 10.10.50.0/24 | VPN_NYC address |
+| 1 | INT_USA_1 | 10.10.1.0/24 | INT_USA_1 address |
+| 2 | INT_USA_1 | 10.10.10.0/24 | INT_USA_1 address |
+| 3 | INT_USA_1 | 10.10.20.0/24 | INT_USA_1 address |
+| 4 | INT_USA_1 | 10.10.30.0/24 | INT_USA_1 address |
+| 5 | INT_USA_1 | 10.10.40.0/24 | INT_USA_1 address |
+| 6 | INT_USA_1 | 10.10.50.0/24 | INT_USA_1 address |
+| 7 | INT_USA_2 | 10.10.1.0/24 | INT_USA_2 address |
+| 8 | INT_USA_2 | 10.10.10.0/24 | INT_USA_2 address |
+| 9 | INT_USA_2 | 10.10.20.0/24 | INT_USA_2 address |
+| 10 | INT_USA_2 | 10.10.30.0/24 | INT_USA_2 address |
+| 11 | INT_USA_2 | 10.10.40.0/24 | INT_USA_2 address |
+| 12 | INT_USA_2 | 10.10.50.0/24 | INT_USA_2 address |
 
 Two tunnels × six subnets = 12 rules. Each subnet has a NAT rule on **both** tunnels so failover is seamless.
 
@@ -569,12 +569,12 @@ Each WireGuard tunnel is a User Datagram Protocol (UDP) flow between two endpoin
 
 ### 15.2 The two tunnels
 
-| Tunnel | Provider | Exit | Local UDP port | Role |
-|---|---|---|---|---|
-| **VPN_CHI** | Mullvad | Chicago, IL | 51820 | Primary (Tier 1) |
-| **VPN_NYC** | Mullvad | New York City, NY | 51821 | Failover (Tier 2) |
+| Tunnel | Provider | Local UDP port | Role |
+|---|---|---|---|
+| **INT_USA_1** | Mullvad | unique per tunnel | Active (Tier 1) |
+| **INT_USA_2** | Mullvad | unique per tunnel | Failover (Tier 2) |
 
-Each tunnel has its own pfSense interface (`tun_wgX`) and gateway (`GW_VPN_CHI`, `GW_VPN_NYC`).
+Each tunnel has its own pfSense interface (`tun_wgX`) and gateway (`GW_USA_1`, `GW_USA_2`). Exit cities are intentionally not documented in this public repo. Tier 1 was selected by latency test; Tier 2 selected for geographic diversity.
 
 ### 15.3 The gateway group, `VPN_FAILOVER`
 
@@ -582,8 +582,8 @@ A **gateway group** is a pfSense construct that bundles multiple gateways with a
 
 | Member | Tier | Behaviour |
 |---|---|---|
-| `GW_VPN_CHI` | 1 | Active when up |
-| `GW_VPN_NYC` | 2 | Promoted to active if Tier 1 is down |
+| `GW_USA_1` | 1 | Active when up |
+| `GW_USA_2` | 2 | Promoted to active if Tier 1 is down |
 
 Gateway health is monitored by pfSense via Internet Control Message Protocol (ICMP) probes (`apinger` / `dpinger` daemon). If three consecutive probes fail to reach the Mullvad endpoint, the tunnel is marked down and Tier 2 is promoted within ~30 seconds.
 
@@ -592,14 +592,14 @@ Gateway health is monitored by pfSense via Internet Control Message Protocol (IC
 Every per-VLAN egress rule (Rule 8 on VLAN 10, Rule 7 on VLAN 50, etc.) sets the gateway to **VPN_FAILOVER**, not to a specific tunnel. This way:
 
 - Failover is automatic, no rule edits, no state flush
-- The gateway abstraction insulates the rule set from tunnel changes (e.g., if you swap NYC for Toronto, only the gateway group changes)
+- The gateway abstraction insulates the rule set from tunnel changes (e.g., if you swap the Tier 2 exit for a different region, only the gateway group changes)
 
 ### 15.5 DNS through the tunnel
 
 | DNS server | Reached via |
 |---|---|
-| 100.64.0.1 | VPN_CHI |
-| 100.64.0.2 | VPN_NYC |
+| 100.64.0.x (Tier 1) | INT_USA_1 |
+| 100.64.0.x (Tier 2) | INT_USA_2 |
 
 These are Mullvad's internal CGNAT-range DNS resolvers, reachable **only** through the corresponding tunnel. pfSense's system DNS configuration lists both. Unbound forwards out via these. There is no fallback to ISP DNS, public DNS, or any non-Mullvad provider.
 
@@ -835,7 +835,7 @@ The lab maintains 10 documented, repeatable tests. Each is run after any change 
 | 3 | DoH/DoT block | Encrypted DNS bypass is blocked |
 | 4 | Plain DNS leak | External resolvers (`8.8.8.8`, `1.1.1.1`) time out |
 | 5 | VPN kill switch drill | Both tunnels down → zero egress |
-| 6 | VPN failover drill | CHI down → NYC promotes within ~30 s |
+| 6 | VPN failover drill | Tier 1 down → Tier 2 promotes within ~30 s |
 | 7 | IPv6 block | `curl -6` fails externally |
 | 8 | Tailscale reach | Only approved subnets reachable from tailnet |
 | 9 | Suricata health | Alert counter advances during browsing |

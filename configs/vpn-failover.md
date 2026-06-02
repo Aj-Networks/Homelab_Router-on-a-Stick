@@ -1,33 +1,34 @@
 # VPN Failover
 
-Dual Mullvad WireGuard tunnel configuration with automatic gateway failover in pfSense 2.8.1. Both exits are EU jurisdiction by design.
+Dual Mullvad WireGuard tunnel configuration with automatic gateway failover in pfSense 2.8.1. Both exits are USA jurisdiction.
 
 ---
 
 ## Naming convention
 
-Short, location-coded names. Format: `<TYPE>_<COUNTRY>_<CITY>`.
+Short, type-coded names. Format: `<TYPE>_<COUNTRY>_<TIER>`.
 
-| Type prefix | Used for | Example |
-|---|---|---|
-| `PEER_` | WireGuard peer entry in pfSense | `PEER_SWE_MMA` |
-| `INT_` | Assigned wg interface | `INT_SWE_MMA` |
-| `GW_` | Gateway in System > Routing > Gateways | `GW_SWE_MMA` |
+| Type prefix | pfSense object | UI location | Example |
+|---|---|---|---|
+| `TUN_` | WireGuard Tunnel | VPN > WireGuard > Tunnels | `TUN_USA_1` |
+| `PEER_` | WireGuard Peer | VPN > WireGuard > Peers | `PEER_USA_1` |
+| `INT_` | Assigned wg interface | Interfaces > Assignments | `INT_USA_1` |
+| `GW_` | Gateway | System > Routing > Gateways | `GW_USA_1` |
 
-Country = ISO 3-letter code (SWE, DEU, NLD, CHE, USA, etc.). City = airport code (MMA, FRA, AMS, ZRH, NYC, etc.).
+Country = ISO 3-letter code (USA). Tier = 1 (active) or 2 (failover).
 
-Old long names (`GW_WG_MULLVAD_SWE_MMA`, etc.) are deprecated. Rename anything that still uses the old format on next touch.
+Older naming attempts (`GW_WG_MULLVAD_*`, `PEER_<COUNTRY>_<CITY>`) are deprecated. The current scheme separates the Tunnel object (`TUN_`) from the Peer sub-object (`PEER_`) and uses a tier suffix rather than a city code so exit locations are not exposed in public docs.
 
 ---
 
 ## Active tunnels (in failover group)
 
-| Name | Provider | Exit City | Tier | Role |
-|---|---|---|---|---|
-| `INT_SWE_MMA` / `GW_SWE_MMA` | Mullvad | Malmö, Sweden | 1 | Primary, all traffic routes here by default |
-| `INT_DEU_FRA` / `GW_DEU_FRA` | Mullvad | Frankfurt, Germany | 2 | Failover, promoted automatically if Tier 1 fails |
+| Name | Provider | Tier | Role |
+|---|---|---|---|
+| `INT_USA_1` / `GW_USA_1` | Mullvad | 1 | Active, all traffic routes here by default |
+| `INT_USA_2` / `GW_USA_2` | Mullvad | 2 | Standby, promoted automatically if Tier 1 fails |
 
-Retired: `VPN_CHI` (deleted), `VPN_NYC` (disabled, kept as break-glass US fallback config).
+Tier 1 was selected by latency test (Diagnostics > Ping from WAN to each candidate Mullvad endpoint). Tier 2 was selected for geographic and peering diversity from Tier 1.
 
 ---
 
@@ -35,10 +36,10 @@ Retired: `VPN_CHI` (deleted), `VPN_NYC` (disabled, kept as break-glass US fallba
 
 | Gateway | Tier | Behavior |
 |---|---|---|
-| `GW_SWE_MMA` | 1 | Active, all traffic routes here by default |
-| `GW_DEU_FRA` | 2 | Standby, promoted automatically if Tier 1 fails |
+| `GW_USA_1` | 1 | Active, all traffic routes here by default |
+| `GW_USA_2` | 2 | Standby, promoted automatically if Tier 1 fails |
 
-Trigger Level: **Member Down**. pfSense monitors gateway health via ICMP. If `GW_SWE_MMA` goes down, `GW_DEU_FRA` is promoted with no manual intervention.
+Trigger Level: **Member Down**. pfSense monitors gateway health via ICMP. If `GW_USA_1` goes down, `GW_USA_2` is promoted with no manual intervention.
 
 All internal firewall rules use `VPN_FAILOVER` as their gateway, not individual tunnel gateways. This ensures failover is automatic and transparent.
 
@@ -52,10 +53,14 @@ Each gateway needs a **unique** Monitor IP. pfSense installs one static route pe
 
 | Gateway | Monitor IP | Notes |
 |---|---|---|
-| `GW_SWE_MMA` | `1.1.1.1` | Cloudflare DNS, distinct public IP |
-| `GW_DEU_FRA` | `9.9.9.9` | Quad9 DNS, distinct public IP |
+| `GW_USA_1` | `1.1.1.1` | Cloudflare DNS, distinct public IP |
+| `GW_USA_2` | `9.9.9.9` | Quad9 DNS, distinct public IP |
 
 ICMP travels through each respective tunnel (no ISP leak - your WAN sees only the encrypted WireGuard packets). The remote target sees Mullvad's exit IP, not yours.
+
+### Temporary monitor IPs during migration
+
+When ADDING a new tunnel while old tunnels still use `1.1.1.1` and `9.9.9.9`, the new gateway's monitor IP must be different to avoid collision. Use `8.8.8.8` and `149.112.112.112` as temporary alternatives, then swap back to `1.1.1.1` / `9.9.9.9` after the old tunnels are deleted.
 
 ### Why NOT use Mullvad's `100.64.0.31` as monitor
 
@@ -75,11 +80,12 @@ You would need a unique IP per Mullvad server that responds to ICMP. Mullvad doe
 
 | Setting | Value |
 |---|---|
-| DNS Servers | Single entry: `100.64.0.31`, Gateway = **default** (blank) |
+| DNS Servers | Two entries: `100.64.0.x` (from Tier 1 `.conf`) mapped to `GW_USA_1`, `100.64.0.x` (from Tier 2 `.conf`) mapped to `GW_USA_2` |
 | DNS Server Override | Unchecked |
 | DNS Resolution Behavior | Use local DNS (127.0.0.1), fall back to remote DNS Servers |
+| Do not use DNS servers from DHCP | Checked |
 
-**Why a single entry with default gateway:** Mullvad reuses `100.64.0.31` across servers. A second entry with the same IP but a different gateway forces pfSense to pin a static route to only one gateway, which breaks the other gateway's DNS path during failover. Leaving Gateway = default lets DNS follow the `VPN_FAILOVER` group's active tier transparently.
+Each tunnel gets its own DNS entry, mapped to its own gateway, so DNS follows the active VPN_FAILOVER tier without static-route collisions.
 
 ---
 
@@ -89,10 +95,10 @@ DNS is locked to the VPN tunnels, it cannot leak to WAN under any condition, inc
 
 | DNS Server | Mapped Gateway | Effect |
 |---|---|---|
-| `100.64.0.31` | default (blank) | Follows the active `VPN_FAILOVER` tier - MMA primary, FRA on failover |
+| `100.64.0.x` (Tier 1) | `GW_USA_1` | Used while Tier 1 is active |
+| `100.64.0.x` (Tier 2) | `GW_USA_2` | Used when failover promotes Tier 2 |
 
 - DNS Resolver is bound strictly to internal interfaces and outbound only via the active VPN tunnel
-- System DNS uses one Mullvad address with default gateway (not pinned to a specific tunnel) so DNS fails over with the gateway group
 - No fallback to ISP DNS exists
 
 ---
@@ -105,26 +111,26 @@ If all tunnels go down at the same time, the NAT and firewall layers make sure t
 
 ## WireGuard config explained (plain English)
 
-Every Mullvad WireGuard config has the same structure. Using the SWE_MMA file as a worked example:
+Every Mullvad WireGuard config has the same structure:
 
 ```ini
 [Interface]
-# Device: Superb Sloth
+# Device: <Mullvad-assigned label>
 PrivateKey = <REDACTED, lives in password manager>
 Address = 10.x.3.xxx/32
-DNS = 100.64.0.31
+DNS = 100.64.0.x
 
 [Peer]
 PublicKey = <mullvad-server-public-key>
 AllowedIPs = 0.0.0.0/0
-Endpoint = 45.x.59.xx:51820
+Endpoint = x.x.x.x:51820
 ```
 
 ### `[Interface]` block - YOUR side of the tunnel
 
 | Line | What it is | Where it comes from |
 |---|---|---|
-| `# Device: Superb Sloth` | Friendly device label assigned by Mullvad when you generated the keypair on their site. Comment only, ignored by WireGuard | Mullvad account, "WireGuard configuration" page |
+| `# Device: <label>` | Friendly device label assigned by Mullvad when you generated the keypair on their site. Comment only, ignored by WireGuard | Mullvad account, "WireGuard configuration" page |
 | `PrivateKey` | YOUR secret. Mathematically paired with a public key Mullvad has on file. NEVER commit or share | Generated by Mullvad (or by you locally) when you created the device entry |
 | `Address` | The IP YOUR side of the tunnel uses inside the tunnel. The `/32` means it is a single host address, not a subnet. This is private to you, only meaningful inside the encrypted tunnel | Assigned by Mullvad |
 | `DNS` | The DNS server you will use while this tunnel is up. `100.64.0.x` is Mullvad's internal DNS reachable only through the tunnel | Mullvad standard |
@@ -147,34 +153,95 @@ That is the entire WireGuard handshake summarized in plain English.
 
 ## Adding a new Mullvad tunnel (procedure)
 
-Use the naming convention from the top of this doc. Example uses Frankfurt.
+Use the naming convention from the top of this doc. The numeric tier is assigned in step 8.
 
-1. Mullvad account > WireGuard configuration > pick city > Download config (`.conf` file)
-2. pfSense > VPN > WireGuard > Tunnels > Add Tunnel named `PEER_DEU_FRA`
-   - Listen Port: leave blank (random)
-   - Interface Keys > Private Key: paste from the `.conf` file `PrivateKey`
-3. Add Peer to the tunnel
-   - Public Key: paste from `.conf` file `[Peer] PublicKey`
-   - Endpoint: paste `Endpoint` value (IP + port)
-   - Allowed IPs: `0.0.0.0/0` (full-tunnel)
-4. Interfaces > Assignments > Add the new wg interface, description `INT_DEU_FRA`
-5. Interfaces > the new interface > Enable, set IPv4 = Static, fill `Address` value from `.conf` (e.g. `10.x.3.xxx/32`)
-6. System > Routing > Gateways > Add `GW_DEU_FRA`
-   - Gateway IP: the `.conf` `Address` minus `/32`
-   - Monitor IP: a distinct public DNS IP not used by any other gateway (e.g. `9.9.9.9` if `1.1.1.1` is taken). Do NOT use Mullvad's `100.64.0.x` here, it is reused across servers and breaks pfSense static routing
-7. System > General Setup > DNS Servers > add the new `100.64.0.x` DNS from the `.conf`, map it to the new gateway, check "Do not use DNS servers from DHCP"
-8. Firewall > NAT > Outbound > add hybrid/manual NAT rule mapping internal nets to the new wg interface
-9. System > Routing > Gateway Groups > Edit `VPN_FAILOVER` > add the new gateway at the desired tier
-10. Test: traceroute from a client, confirm the exit IP via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check)
+### 1. VPN > WireGuard > Tunnels > Add Tunnel
+
+- Enable Tunnel: check
+- Description: `TUN_USA_<N>` (next free tier number)
+- Listen Port: next free port unique across all tunnels on this box (e.g. 51822, 51823)
+- Private Key: paste `[Interface] PrivateKey` from the `.conf` file
+- Interface Addresses > Add Address:
+  - Address: `.conf` `Address` without `/32`
+  - CIDR: `32`
+  - Description: `INT_USA_<N>`
+- Save Tunnel
+
+### 2. VPN > WireGuard > Peers > Add Peer
+
+- Enable Peer: check
+- Tunnel: select `TUN_USA_<N>` (the tunnel from step 1)
+- Description: `PEER_USA_<N>`
+- Dynamic Endpoint: **UNCHECK** (Mullvad uses static endpoints)
+- Endpoint: IP portion of `.conf` `Endpoint`
+- Port: port portion of `.conf` `Endpoint` (typically 51820)
+- Keep Alive: `25` (standard WireGuard recommendation, keeps NAT alive)
+- Public Key: paste `[Peer] PublicKey` from `.conf`
+- Pre-shared Key: blank (Mullvad does not use PSK)
+- Allowed IPs > Add Allowed IP:
+  - Subnet: `0.0.0.0`
+  - CIDR: `0`
+  - Description: `fulltunnel`
+- Save Peer
+
+### 3. Interfaces > Assignments
+
+- Add the new wg interface with Description `INT_USA_<N>`
+- Open the interface > Enable, IPv4 Static, paste `.conf` `Address` (with `/32`)
+- MTU: `1420` (WireGuard standard, 1500 - 80 bytes overhead)
+- Block private networks: UNCHECK (Mullvad DNS uses CGNAT, tunnel uses RFC1918)
+- Block bogon networks: UNCHECK
+
+### 4. System > Routing > Gateways > Add Gateway
+
+- Interface: `INT_USA_<N>`
+- Name: `GW_USA_<N>`
+- Gateway: `.conf` `Address` without `/32`
+- Monitor IP: a distinct public DNS IP not used by any other gateway. Do NOT use Mullvad's `100.64.0.x`, it is reused across servers and breaks pfSense static routing
+
+### 5. System > General Setup > DNS Servers
+
+- Add the new `100.64.0.x` DNS from the `.conf`, map it to `GW_USA_<N>`
+- Tick "Do not use DNS servers from DHCP"
+
+### 6. Firewall > NAT > Outbound
+
+- Copy each existing tunnel's 6 outbound NAT rules
+- On each copy, change Interface to `INT_USA_<N>`, NAT Address to `INT_USA_<N> address`, Description to match
+- Apply Changes
+
+### 7. System > Routing > Gateway Groups > Edit `VPN_FAILOVER`
+
+- Add `GW_USA_<N>` at the desired tier
+
+### 8. Test
+
+- Traceroute from a client, confirm the exit IP via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check)
+- Force failover by disabling the active tunnel briefly, confirm traffic flips to the new tier
+
+---
+
+## Common handshake breakers
+
+If a tunnel fails to come up, check Status > WireGuard > Peers for "Latest handshake" age. If "Never" or stale, the tunnel is not actually up. Most common causes (in order):
+
+1. Listen Port collision (two tunnels using the same port)
+2. Private Key paste error (extra whitespace, missing character)
+3. Public Key paste error
+4. Dynamic Endpoint left CHECKED (no endpoint to send to)
+5. Endpoint IP or Port wrong
+6. Outbound UDP blocked by an upstream firewall
+7. Local clock badly skewed (cryptographic timestamps reject)
+8. Pre-shared Key mismatch (one side has it, other does not)
 
 ---
 
 ## Verified Behavior
 
-- Failover SWE_MMA > DEU_FRA confirmed under simulated tunnel failure
+- Failover Tier 1 > Tier 2 confirmed under simulated tunnel failure (manual peer disable)
 - Zero DNS/IP/WebRTC leaks confirmed via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check) on both tunnels
 - DNS remains on Mullvad servers throughout failover, no ISP DNS exposure
-- Each gateway health-checks via a distinct public DNS IP (MMA = 1.1.1.1, FRA = 9.9.9.9). ICMP routes through respective tunnel, no ISP leak
+- Each gateway health-checks via a distinct public DNS IP (`GW_USA_1` = 1.1.1.1, `GW_USA_2` = 9.9.9.9). ICMP routes through respective tunnel, no ISP leak
 
 ---
 
@@ -183,4 +250,5 @@ Use the naming convention from the top of this doc. Example uses Frankfurt.
 - **Never commit `.conf` files or the `PrivateKey`** to git. The `.conf` extension is already in `.gitignore`
 - Public keys and endpoints ARE safe to commit (they are public information by design)
 - The `Address` field (e.g. `10.x.3.xxx/32`) is semi-sensitive, redact it in docs
+- **Exit city, server hostname, and provider account number are PRIVATE** and should never appear in this repo. Use tier numbers (`USA_1`, `USA_2`) only.
 - If a private key leaks, regenerate the device entry in Mullvad and rotate

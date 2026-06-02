@@ -88,10 +88,10 @@ dig @1.1.1.1 example.com
 **Only do this on a test client, not your main machine.**
 
 1. Note current IP at `ipleak.net` from the client, should be a Mullvad exit
-2. On pfSense: `Interfaces > VPN_CHI`, uncheck `Enable`
-3. Within 30s, gateway group should promote `VPN_NYC`
-4. Refresh `ipleak.net`, should still be a Mullvad exit (NYC this time)
-5. Now disable `VPN_NYC` too
+2. On pfSense: `Interfaces > INT_USA_1`, uncheck `Enable`
+3. Within 30s, gateway group should promote `GW_USA_2`
+4. Refresh `ipleak.net`, should still be a Mullvad exit (Tier 2 this time)
+5. Now disable `INT_USA_2` too
 6. Refresh, browser should fail to load anything; no IP leak
 7. Re-enable both interfaces; normal service should resume inside a minute
 
@@ -101,11 +101,11 @@ dig @1.1.1.1 example.com
 
 ## 6. VPN failover drill (softer version of #5)
 
-1. On pfSense: `Status > Gateways`, note `VPN_CHI` is `Online` and primary
-2. Suspend the CHI WireGuard peer via `VPN > WireGuard` (toggle off)
-3. Gateway group should mark CHI `Offline`, NYC `Online` and primary
-4. From a client: `curl ifconfig.me`, should show a NYC Mullvad IP
-5. Re-enable CHI; it should reclaim primary within ~30s
+1. On pfSense: `Status > Gateways`, note `GW_USA_1` is `Online` and primary
+2. Suspend the Tier 1 WireGuard peer via `VPN > WireGuard` (toggle off)
+3. Gateway group should mark `GW_USA_1` `Offline`, `GW_USA_2` `Online` and primary
+4. From a client: `curl ifconfig.me`, should show a Tier 2 Mullvad IP
+5. Re-enable Tier 1; it should reclaim primary within ~30s
 
 ---
 
