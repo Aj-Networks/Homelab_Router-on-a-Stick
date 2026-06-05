@@ -6,6 +6,21 @@ This document describes the verified 4-layer setup applied 2026-06-04 after a LA
 
 ---
 
+## Privacy notes (read first)
+
+This document uses **`USA_1`** and **`USA_2`** as the names of the two Mullvad VPN tier objects (tunnel, peer, interface assignment, gateway). Those are intentional anonymization aliases. The actual Mullvad exit city / server names are deliberately omitted from this and every other public file in this repo, per the project's standing privacy convention. The aliases are pinned in [`vpn-failover.md`](vpn-failover.md) and tracked in project memory.
+
+Other deliberate omissions in this doc:
+- WireGuard peer endpoint public IPs (Mullvad's edge addresses). If a placeholder is ever needed, use `xxx.xxx.xxx.xxx`.
+- Your assigned tunnel-side IPs (`10.x.x.x/32` per Mullvad config).
+- Your ISP gateway IP.
+- WireGuard public/private keys.
+- Real device MAC addresses, SSIDs, hostnames.
+
+Mullvad's published Carrier-Grade NAT (CGNAT) DNS IPs in the `100.64.0.0/10` range are listed openly because Mullvad documents them publicly on `mullvad.net/help/dns-over-https-and-dns-over-tls`. They identify Mullvad's service tiers, not your account.
+
+---
+
 ## What it is
 
 Four independent layers that each handle a different failure mode for the DNS path:
