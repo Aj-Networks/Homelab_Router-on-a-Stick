@@ -25,15 +25,16 @@
 
 | Date | Change |
 |---|---|
+| **2026-06-04** | DNS resilience hardened end-to-end with a 4-layer defense after the same-day soft-hang outage. Layer 1: forwarder redundancy (4 Mullvad entries across both tunnels). Layer 2: Unbound advanced tuning (Serve Expired, Prefetch, 5-min host cache TTL, Aggressive NSEC). Layer 3: gateway monitor IPs moved from public DNS to Mullvad in-tunnel IPs so tunnel-internal failures are detected. Layer 4: cron + shell script probes Unbound at the loopback every 60s, auto-restarts the resolver on 3 consecutive failures. Maximum detection-to-recovery window ~3 minutes; the original outage would have self-recovered with no human intervention under this stack. Full procedure in [`configs/dns-resilience.md`](configs/dns-resilience.md). |
 | **2026-06-04** | LAN-wide DNS outage resolved. pfSense Unbound's UDP/53 sockets to the upstream DNS forwarders wedged after a recent VPN re-handshake (process up, sockets dead). Plain service restart did not clear it. Fix: added a redundant Mullvad DNS forwarder, which triggered a config-reload and rebuilt outbound sockets cleanly. All forwarders started responding within ~60ms. Root design issue logged for hardening: single-vendor DNS with no fallback path is a single point of failure for the whole LAN. |
 | **2026-06-03** | Wired workstation on VLAN10 showed periodic gateway drops without link loss. Traced to Windows NIC bridge-filter bindings (`ms_l2bridge` / `ms_l1vhlwf`) auto-installed by Hyper-V / WSL / Docker on the laptop. Per-NIC `Disable-NetAdapterBinding` cleared it. Not a pfSense or switch fault. |
-| **2026-06-01** | VPN migrated to dual USA exits (`USA_1` active, `USA_2` failover). `TUN_` / `PEER_` naming split. Public docs scrubbed of city-level VPN details per new global privacy rule. |
 
 <details>
-<summary>See more (7 older entries)</summary>
+<summary>See more (8 older entries)</summary>
 
 | Date | Change |
 |---|---|
+| **2026-06-01** | VPN migrated to dual USA exits (`USA_1` active, `USA_2` failover). `TUN_` / `PEER_` naming split. Public docs scrubbed of city-level VPN details per new global privacy rule. |
 | **2026-05-27** | Enabled **dedicated OOB management port** on Protectli Port 3 (igb2, `172.16.99.0/24`). Direct ethernet recovery path that survives any LAN/trunk misconfiguration. Enterprise pattern. |
 | **2026-05-27** | Attempted native VLAN 999 + dedicated mgmt VLAN hardening. Hit GS308E v4 hardware limit ([details](docs/LIMITATIONS.md)). Closed Part 1 at 9/10 of enterprise hardening; the 1-point gap is hardware-bounded. |
 | **2026-05-27** | GS308E port allocation **locked** at v1.0 (full Part 1 layout). See [switch-port-map.md](configs/switch-port-map.md). |
@@ -167,6 +168,7 @@ Seven independent defenses. A packet has to bypass **all of them** to leak.
 - [`vlan-assignments.md`](configs/vlan-assignments.md) · VLAN map
 - [`switch-port-map.md`](configs/switch-port-map.md) · GS308E ports
 - [`vpn-failover.md`](configs/vpn-failover.md) · WireGuard tunnels + gateway groups
+- [`dns-resilience.md`](configs/dns-resilience.md) · 4-layer DNS resilience: forwarder redundancy, Unbound tuning, in-tunnel gateway monitoring, cron-driven auto-restart on health check failure
 - [`tailscale.md`](configs/tailscale.md) · overlay + ACL
 - [`mac-mini/`](configs/mac-mini/) · Docker host
 - [`ccna-lab/`](configs/ccna-lab/) · Cisco practice lab

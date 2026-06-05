@@ -49,30 +49,39 @@ All internal firewall rules use `VPN_FAILOVER` as their gateway, not individual 
 
 Each gateway needs a **unique** Monitor IP. pfSense installs one static route per Monitor IP pinning it to that gateway's interface. Two gateways sharing the same Monitor IP collide - the static route pins to only one of them, the other's monitor traffic exits the wrong tunnel, and that gateway falsely shows Offline.
 
-### Verified working configuration
+### Verified working configuration (current, 2026-06-04)
+
+| Gateway | Monitor IP | Notes |
+|---|---|---|
+| `GW_USA_1` | `100.64.0.31` | Mullvad in-tunnel DNS, family tier, distinct from `GW_USA_2`'s monitor |
+| `GW_USA_2` | `100.64.0.32` | Mullvad in-tunnel DNS, family tier, distinct from `GW_USA_1`'s monitor |
+
+The monitor packet stays inside the WireGuard tunnel end-to-end. It only completes successfully if Mullvad's internal network is functional, not just the tunnel handshake. This detects the case where the tunnel is up but Mullvad's internal services (DNS, routing) are dead, which the previous public-IP monitors did not catch. See [`dns-resilience.md`](dns-resilience.md) for the full failure mode and rationale.
+
+Latency is higher than public-IP monitoring (~50-60ms vs ~10ms for `1.1.1.1`) and loss variance is slightly higher (0-3% vs 0%). Acceptable trade-off given the broader failure coverage.
+
+### Previous configuration (pre 2026-06-04)
 
 | Gateway | Monitor IP | Notes |
 |---|---|---|
 | `GW_USA_1` | `1.1.1.1` | Cloudflare DNS, distinct public IP |
 | `GW_USA_2` | `9.9.9.9` | Quad9 DNS, distinct public IP |
 
-ICMP travels through each respective tunnel (no ISP leak - your WAN sees only the encrypted WireGuard packets). The remote target sees Mullvad's exit IP, not yours.
+ICMP travels through each respective tunnel (no ISP leak - your WAN sees only the encrypted WireGuard packets). The remote target sees Mullvad's exit IP, not yours. This was the verified path before the 2026-06-04 incident exposed its blind spot for tunnel-internal failures.
 
 ### Temporary monitor IPs during migration
 
 When ADDING a new tunnel while old tunnels still use `1.1.1.1` and `9.9.9.9`, the new gateway's monitor IP must be different to avoid collision. Use `8.8.8.8` and `149.112.112.112` as temporary alternatives, then swap back to `1.1.1.1` / `9.9.9.9` after the old tunnels are deleted.
 
-### Why NOT use Mullvad's `100.64.0.31` as monitor
+### Why distinct IPs per gateway (not the same IP for both)
 
-`100.64.0.31` is Mullvad's per-server DNS IP, **reused across many servers**. If both gateways use it as Monitor IP, pfSense pins the static route for `100.64.0.31` to whichever gateway was configured last - the other gateway's monitor traffic exits the wrong tunnel and marks the gateway falsely Offline. Verified in this lab on 2026-05.
+`100.64.0.31` is Mullvad's per-server DNS IP, **reused across many servers**. If both gateways use the same IP as Monitor IP, pfSense pins the static route for that IP to whichever gateway was configured last - the other gateway's monitor traffic exits the wrong tunnel and marks the gateway falsely Offline. Verified in this lab on 2026-05.
+
+The 2026-06-04 update sidesteps this by using **different per-gateway IPs** in Mullvad's set: `100.64.0.31` for `GW_USA_1`, `100.64.0.32` for `GW_USA_2`. Each gateway gets its own distinct route, no collision.
 
 ### Why NOT use `10.64.0.1` (Mullvad's tunnel gateway)
 
-Same issue - it is also reused across servers. Distinct IP per gateway is required.
-
-### If you want fully in-tunnel monitoring later
-
-You would need a unique IP per Mullvad server that responds to ICMP. Mullvad does not publish such addresses. Public DNS (above) is the pragmatic choice and is the verified path.
+Same per-server reuse problem - it is also reused across servers. Distinct IPs per gateway is required.
 
 ---
 
