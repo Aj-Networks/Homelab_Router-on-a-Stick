@@ -25,6 +25,7 @@
 
 | Date | Change |
 |---|---|
+| **2026-06-04** | LAN-wide DNS outage resolved. pfSense Unbound's UDP/53 sockets to the upstream DNS forwarders wedged after a recent VPN re-handshake (process up, sockets dead). Plain service restart did not clear it. Fix: added a redundant Mullvad DNS forwarder, which triggered a config-reload and rebuilt outbound sockets cleanly. All forwarders started responding within ~60ms. Root design issue logged for hardening: single-vendor DNS with no fallback path is a single point of failure for the whole LAN. |
 | **2026-06-03** | Wired workstation on VLAN10 showed periodic gateway drops without link loss. Traced to Windows NIC bridge-filter bindings (`ms_l2bridge` / `ms_l1vhlwf`) auto-installed by Hyper-V / WSL / Docker on the laptop. Per-NIC `Disable-NetAdapterBinding` cleared it. Not a pfSense or switch fault. |
 | **2026-06-01** | VPN migrated to dual USA exits (`USA_1` active, `USA_2` failover). `TUN_` / `PEER_` naming split. Public docs scrubbed of city-level VPN details per new global privacy rule. |
 | **2026-05-27** | Enabled **dedicated OOB management port** on Protectli Port 3 (igb2, `172.16.99.0/24`). Direct ethernet recovery path that survives any LAN/trunk misconfiguration. Enterprise pattern. |
