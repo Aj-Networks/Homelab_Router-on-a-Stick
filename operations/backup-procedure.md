@@ -14,7 +14,7 @@ Configuration backup strategy for the lab. Covers pfSense, the GS308E switch, an
 | Tailscale auth keys | Text | Password manager only, never in repo |
 | Mullvad account number | Text | Password manager only |
 
-The markdown configs in `/configs/` are **documentation**, not a backup, they describe the system, they don't restore it.
+The markdown docs in the topic folders (`network/`, `vpn/`, `services/`, `operations/`) are **documentation**, not a backup, they describe the system, they don't restore it.
 
 ---
 
@@ -51,7 +51,7 @@ The GS308E does not expose config over a standard protocol, it requires the Wind
 4. Encrypt the `.cfg` with `age` or `git-crypt` before committing:
 
 ```
-age -p -o configs/switch-config-YYYY-MM-DD.cfg.age <raw-cfg-file>
+age -p -o switch-config-YYYY-MM-DD.cfg.age <raw-cfg-file>
 ```
 
 ### Restore

@@ -192,7 +192,7 @@ One dedicated laptop on one access port covers ~75% of CCNA hands-on topics. Mul
 | Rule | Reason |
 |---|---|
 | `copy run start` after every successful change | Otherwise config evaporates on reboot |
-| Save a `show run` text dump to `configs/ccna-lab/show-runs/<device>-<phase>.txt` after each phase | Restore reference. Strip passwords before committing. |
+| Save a `show run` text dump to `labs/ccna/show-runs/<device>-<phase>.txt` after each phase | Restore reference. Strip passwords before committing. |
 | SW1 uplinks only to GS308E port 7 (SW1-CATALYST). R1 plugs into SW1 directly. | Avoid bridging the lab into trusted VLANs |
 | Never run a Cisco DHCP server on `10.10.40.0/24` | pfSense DHCP owns this range; conflict would break VLAN 40 |
 | Lab VLANs 110/120/130 stay inside the Cisco gear | Tags get stripped at the GS308E access-mode uplink |

@@ -139,4 +139,4 @@ Then:
 ## Related
 
 - VLAN 10 firewall context: [`firewall-rules.md`](firewall-rules.md)
-- Why the R6400 is on VLAN 10 with AP-level guest isolation (and the limitation that creates): [`../docs/LAB_TECHNICAL_GUIDE.md`](../docs/LAB_TECHNICAL_GUIDE.md) section 25
+- Why the R6400 is on VLAN 10 with AP-level guest isolation (and the limitation that creates): [`../docs/technical-guide.md`](../docs/technical-guide.md) section 25

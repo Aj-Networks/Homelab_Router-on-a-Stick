@@ -295,7 +295,7 @@ All internal subnets are drawn from **RFC 1918** ("Address Allocation for Privat
 | 7 | SW1-CATALYST | Access | 40 Lab | - | Cisco Catalyst 3560 (R1 1941 plugs into SW1 directly) |
 | 8 | WAN-ESCAPE | Access | 50 Mgmt | - | Wired direct-WAN escape, unplugged when idle |
 
-> Authoritative source is [`configs/switch-port-map.md`](../configs/switch-port-map.md). Keep these in sync.
+> Authoritative source is [`network/switch-port-map.md`](../network/switch-port-map.md). Keep these in sync.
 
 ### 9.2 What "PVID" means
 
@@ -915,7 +915,7 @@ This is the core property of **defense in depth**: redundancy across orthogonal 
 | **RFC 1918 alias for inter-VLAN block** | One rule covers every present and future VLAN. New VLANs are isolated by default. |
 | **Gateway group abstraction** | Failover is automatic and transparent to firewall rules. |
 | **DNS lock-in across all five layers** | Plain DNS, DoH, DoT, IPv6, every encrypted-DNS bypass path is closed. |
-| **Markdown documentation per concern** | Each `configs/*.md` describes both the *what* and the *why*. |
+| **Markdown documentation per concern** | Each topic folder's `*.md` describes both the *what* and the *why*. |
 | **Repeatable test suite** | 10 tests with cadence and pass criteria. Verification is not a vibe. |
 | **Default-deny Tailscale ACL** | Even with tagged devices, the destination set is minimal and explicit. |
 | **DNSBL VIP on a non-overlapping range** | Block page works without colliding with any real subnet. |
@@ -1112,15 +1112,15 @@ A brownout drops the VPN tunnels mid-session. The kill switch should hold during
 ### Companion repository documentation
 - [`README.md`](../README.md), high-level project summary
 - [`CHANGELOG.md`](../CHANGELOG.md), phase-by-phase history
-- [`configs/firewall-rules.md`](../configs/firewall-rules.md), per-VLAN rule chains
-- [`configs/nat-rules.md`](../configs/nat-rules.md), manual outbound NAT rules
-- [`configs/vlan-assignments.md`](../configs/vlan-assignments.md), interface and subnet map
-- [`configs/switch-port-map.md`](../configs/switch-port-map.md), GS308E port-VLAN mapping
-- [`configs/vpn-failover.md`](../configs/vpn-failover.md), WireGuard tunnel and gateway-group config
-- [`configs/pfblockerng.md`](../configs/pfblockerng.md), DNSBL, IPv4, and update schedule
-- [`configs/tailscale.md`](../configs/tailscale.md), Tailscale routes, ACL, and tag policy
-- [`configs/backup-procedure.md`](../configs/backup-procedure.md), backup and restore
-- [`configs/testing-procedures.md`](../configs/testing-procedures.md), 10-test verification suite
+- [`network/firewall-rules.md`](../network/firewall-rules.md), per-VLAN rule chains
+- [`network/nat-rules.md`](../network/nat-rules.md), manual outbound NAT rules
+- [`network/vlan-assignments.md`](../network/vlan-assignments.md), interface and subnet map
+- [`network/switch-port-map.md`](../network/switch-port-map.md), GS308E port-VLAN mapping
+- [`vpn/vpn-failover.md`](../vpn/vpn-failover.md), WireGuard tunnel and gateway-group config
+- [`services/pfblockerng.md`](../services/pfblockerng.md), DNSBL, IPv4, and update schedule
+- [`services/tailscale.md`](../services/tailscale.md), Tailscale routes, ACL, and tag policy
+- [`operations/backup-procedure.md`](../operations/backup-procedure.md), backup and restore
+- [`operations/testing-procedures.md`](../operations/testing-procedures.md), 10-test verification suite
 
 ---
 
