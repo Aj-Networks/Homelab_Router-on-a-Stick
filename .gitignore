@@ -16,12 +16,15 @@ desktop.ini
 *.conf
 
 # Personal hardware reference images (kept local, not for public repo)
-diagrams/FW6E.png
-diagrams/GS308E.png
-diagrams/R6400.png
+assets/diagrams/FW6E.png
+assets/diagrams/GS308E.png
+assets/diagrams/R6400.png
 
-# Screenshots (local only, not deployed)
-screenshots/
+# New screenshots stay local by default; tracked leak-test evidence is exempt
+assets/screenshots/*
+!assets/screenshots/ipleak.png
+!assets/screenshots/mullvad.png
+!assets/screenshots/whatismyipaddress.png
 
 # Claude Code / AI assistant artifacts (contains local paths and private memory pointers)
 .claude/
