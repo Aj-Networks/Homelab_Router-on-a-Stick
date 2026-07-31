@@ -49,25 +49,25 @@ All internal firewall rules use `VPN_FAILOVER` as their gateway, not individual 
 
 Each gateway needs a **unique** Monitor IP. pfSense installs one static route per Monitor IP pinning it to that gateway's interface. Two gateways sharing the same Monitor IP collide - the static route pins to only one of them, the other's monitor traffic exits the wrong tunnel, and that gateway falsely shows Offline.
 
-### Verified working configuration (current, 2026-06-04)
+### Verified working configuration (current, 2026-07-31)
 
 | Gateway | Monitor IP | Notes |
 |---|---|---|
-| `GW_USA_1` | `100.64.0.31` | Mullvad in-tunnel DNS, family tier, distinct from `GW_USA_2`'s monitor |
-| `GW_USA_2` | `100.64.0.32` | Mullvad in-tunnel DNS, family tier, distinct from `GW_USA_1`'s monitor |
+| `GW_USA_1` | `1.1.1.1` | Cloudflare, public anycast, distinct per gateway |
+| `GW_USA_2` | `9.9.9.9` | Quad9, public anycast, distinct per gateway |
 
-The monitor packet stays inside the WireGuard tunnel end-to-end. It only completes successfully if Mullvad's internal network is functional, not just the tunnel handshake. This detects the case where the tunnel is up but Mullvad's internal services (DNS, routing) are dead, which the previous public-IP monitors did not catch. See [`dns-resilience.md`](dns-resilience.md) for the full failure mode and rationale.
+ICMP travels through each respective tunnel. No ISP leak: the WAN sees only encrypted WireGuard packets, and the remote target sees Mullvad's exit IP, not yours.
 
-Latency is higher than public-IP monitoring (~50-60ms vs ~10ms for `1.1.1.1`) and loss variance is slightly higher (0-3% vs 0%). Acceptable trade-off given the broader failure coverage.
+Three properties are mandatory. The address must be **public**, must sit on the **far side of the tunnel**, and must be **unique per gateway**.
 
-### Previous configuration (pre 2026-06-04)
+> [!CAUTION]
+> **Never put the interface's own address in the Monitor IP field.** Found on 2026-07-31: a gateway had its Monitor IP set to the firewall's own WireGuard interface address, identical to the value in its Gateway field. dpinger was pinging the local kernel, so the gateway could never be marked Offline and the failover group could never promote the other tier. `Status > Gateways` showed a healthy green Online the entire time. pfSense does not warn about this.
+>
+> The tell is the RTT column. A correct monitor shows a plausible round trip (30-70 ms through a tunnel). A self-referencing one shows 0 ms or blank.
 
-| Gateway | Monitor IP | Notes |
-|---|---|---|
-| `GW_USA_1` | `1.1.1.1` | Cloudflare DNS, distinct public IP |
-| `GW_USA_2` | `9.9.9.9` | Quad9 DNS, distinct public IP |
+### Superseded: Mullvad in-tunnel monitors (2026-06-04 to 2026-07-31)
 
-ICMP travels through each respective tunnel (no ISP leak - your WAN sees only the encrypted WireGuard packets). The remote target sees Mullvad's exit IP, not yours. This was the verified path before the 2026-06-04 incident exposed its blind spot for tunnel-internal failures.
+The design between those dates used `100.64.0.31` and `100.64.0.32` as monitors, on the theory that an in-tunnel target proves Mullvad's internal network is healthy rather than just the handshake. Reverted on 2026-07-31: those addresses do not receive a usable route in this configuration, the same defect that made them fail as DNS forwarders. The blind spot they were meant to close is now covered by the resolver health probe in [`dns-resilience.md`](dns-resilience.md) Layer 4.
 
 ### Temporary monitor IPs during migration
 
@@ -89,12 +89,25 @@ Same per-server reuse problem - it is also reused across servers. Distinct IPs p
 
 | Setting | Value |
 |---|---|
-| DNS Servers | Two entries: `100.64.0.x` (from Tier 1 `.conf`) mapped to `GW_USA_1`, `100.64.0.x` (from Tier 2 `.conf`) mapped to `GW_USA_2` |
+| DNS Servers | Two entries: `1.1.1.1` mapped to `GW_USA_1`, `9.9.9.9` mapped to `GW_USA_2` |
+| DNS Hostname | Blank on both |
 | DNS Server Override | Unchecked |
 | DNS Resolution Behavior | Use local DNS (127.0.0.1), fall back to remote DNS Servers |
 | Do not use DNS servers from DHCP | Checked |
 
 Each tunnel gets its own DNS entry, mapped to its own gateway, so DNS follows the active VPN_FAILOVER tier without static-route collisions.
+
+> [!CAUTION]
+> **A gateway-bound DNS forwarder must have a route, and pfSense will not create one for you.** pfSense installs a host route for each gateway *Monitor IP*. It does not install one for a gateway-bound *DNS server* address. Found on 2026-07-31: `100.64.0.1` mapped to a tunnel gateway had no route in `netstat -rn` and had never resolved a single query. The second forwarder worked only because it happened to double as the other gateway's Monitor IP.
+>
+> Use the same address as that gateway's Monitor IP, or verify the route exists. Then test each forwarder individually, because a dead forwarder is invisible while the other one answers:
+>
+> ```sh
+> host google.com 1.1.1.1
+> host google.com 9.9.9.9
+> ```
+>
+> Running on one live forwarder behind a config that claims two is the exact condition that caused the 2026-06-04 LAN-wide DNS outage.
 
 ---
 
@@ -206,11 +219,12 @@ Use the naming convention from the top of this doc. The numeric tier is assigned
 - Interface: `INT_USA_<N>`
 - Name: `GW_USA_<N>`
 - Gateway: `.conf` `Address` without `/32`
-- Monitor IP: a distinct public DNS IP not used by any other gateway. Do NOT use Mullvad's `100.64.0.x`, it is reused across servers and breaks pfSense static routing
+- Monitor IP: a distinct **public** DNS IP not used by any other gateway. Do NOT use Mullvad's `100.64.0.x` (no usable route). Do NOT reuse the Gateway field's value: that is this firewall's own interface address and the gateway would never be able to fail
 
 ### 5. System > General Setup > DNS Servers
 
-- Add the new `100.64.0.x` DNS from the `.conf`, map it to `GW_USA_<N>`
+- Add the gateway's Monitor IP as the DNS server address, mapped to `GW_USA_<N>`. It is the one address guaranteed to have a host route through that tunnel
+- Leave DNS Hostname blank (TLS verification is redundant inside the tunnel)
 - Tick "Do not use DNS servers from DHCP"
 
 ### 6. Firewall > NAT > Outbound
@@ -227,6 +241,53 @@ Use the naming convention from the top of this doc. The numeric tier is assigned
 
 - Traceroute from a client, confirm the exit IP via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check)
 - Force failover by disabling the active tunnel briefly, confirm traffic flips to the new tier
+
+---
+
+## Post-build verification (added 2026-07-31)
+
+A replacement interface inherits nothing from the one it replaces. On 2026-07-31 three separate faults were found on interfaces rebuilt the day before, and none of them produced a symptom that pointed at itself. Run all four checks before declaring a tunnel done.
+
+**1. Peers are actually up**
+
+```sh
+wg show
+```
+
+Every peer needs a "latest handshake" under two minutes. Note that this also confirms how many tunnels are genuinely live, which is not always what the UI implies.
+
+**2. MTU is 1420 on every tunnel interface**
+
+```sh
+ifconfig tun_wg0; ifconfig tun_wg2
+```
+
+MTU 1420 and MSS 1420 belong to the interface, not to the account or the peer, and a newly created interface starts at the 1500 default. Without MSS clamping the failure mode is a PMTU black hole: the tunnel carries 1420, the client negotiates 1460, oversized packets are dropped, and the ICMP that would tell the client to shrink never arrives. TCP stalls and backs off. The observed symptom was throughput swinging between 240 and 900 Mbps on the same exit.
+
+This command also prints each interface's `inet` address, which is the value that must **never** appear in a Monitor IP field.
+
+**3. Monitor routes exist and the RTT is plausible**
+
+```sh
+netstat -rn | grep -E '1\.1\.1\.1|9\.9\.9\.9'
+```
+
+Then check `Status > Gateways`. A correct monitor shows a real round trip. 0 ms or blank means the packet never left the firewall.
+
+**4. Every DNS forwarder answers individually**
+
+```sh
+host google.com 1.1.1.1
+host google.com 9.9.9.9
+```
+
+Both must return records. A forwarder that silently never answers stays invisible until the other one dies.
+
+## Choosing the Tier 1 exit
+
+Pick by measurement, not by regional reputation. Read the RTT for each candidate in `Status > Gateways` first, then run at least a dozen throughput tests on each, because a handful of runs will not separate a genuine difference from normal variance.
+
+On 2026-07-31 the Tier 1 exit was the slower of the two at 68 ms against 37 ms. Promoting the faster one held the average at roughly 470 Mbps but raised the floor from 240 to 340 Mbps and halved the spread from 660 to 320 Mbps across 21 runs. The average alone would have shown no improvement; the floor and the spread are what users actually feel.
 
 ---
 
