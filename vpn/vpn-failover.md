@@ -127,7 +127,7 @@ DNS is locked to the VPN tunnels, it cannot leak to WAN under any condition, inc
 
 ## How the Kill Switch Ties In
 
-If all tunnels go down at the same time, the NAT and firewall layers make sure traffic is **blocked**, not leaked to WAN. See [`nat-rules.md`](nat-rules.md) for the full outbound NAT breakdown.
+If all tunnels go down at the same time, the NAT and firewall layers make sure traffic is **blocked**, not leaked to WAN. See [`nat-rules.md`](../network/nat-rules.md) for the full outbound NAT breakdown.
 
 ---
 
