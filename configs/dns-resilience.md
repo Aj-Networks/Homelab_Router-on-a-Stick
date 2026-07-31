@@ -83,6 +83,35 @@ A resilient DNS stack must:
 
 `System → General Setup → DNS Servers`
 
+> [!WARNING]
+> **Corrected 2026-07-31.** The original design below used Mullvad in-tunnel `100.64.0.x` addresses as forwarders. Testing proved those addresses **never resolved**. pfSense creates a host route for gateway *Monitor IPs*, not for gateway-bound *DNS server* addresses, so queries to `100.64.0.x` had no route out. The lab had been running on a single live forwarder while the config claimed several. The corrected configuration is below; the original is kept underneath for history.
+
+### Current configuration (2026-07-31)
+
+| # | Address | Hostname | Gateway |
+|---|---|---|---|
+| 1 | `1.1.1.1` | (blank) | `GW_USA_1` |
+| 2 | `9.9.9.9` | (blank) | `GW_USA_2` |
+
+`DNS Server Override`: unchecked.
+`DNS Resolution Behavior`: Use local DNS (127.0.0.1), fall back to remote DNS Servers (Default).
+
+**Why these addresses.** Each is already that gateway's Monitor IP, so pfSense has installed a host route pinning it to that tunnel. That route is what makes the forwarder reachable at all. Verify before trusting any forwarder:
+
+```sh
+netstat -rn | grep -E '1\.1\.1\.1|9\.9\.9\.9'
+host google.com 1.1.1.1
+host google.com 9.9.9.9
+```
+
+**Why this does not leak.** Queries travel inside WireGuard, and Mullvad intercepts in-tunnel port 53 and answers from its own resolver regardless of the address dialled. The WAN sees encrypted UDP to a Mullvad endpoint and nothing else. The privacy posture is identical to the original design; only the addressing changed.
+
+**Hostname stays blank.** That field exists for TLS certificate verification when Unbound speaks DNS-over-TLS. The query is already encrypted inside the tunnel, so DoT on top adds a failure mode and no privacy.
+
+**No content filtering at the resolver.** The original design used Mullvad's filtered tiers. Router-level content filtering produces "random site broken, nothing in the logs" mysteries that are expensive to diagnose. Blocking belongs in pfBlockerNG where it is visible and controllable.
+
+### Original design (superseded, kept for history)
+
 Configured 4 Mullvad DNS forwarder entries spread across both VPN tier gateways:
 
 | # | Mullvad IP | Hostname | Gateway | Mullvad tier |
@@ -92,16 +121,7 @@ Configured 4 Mullvad DNS forwarder entries spread across both VPN tier gateways:
 | 3 | `100.64.0.1` | `base.dns.mullvad.net` | `GW_USA_1` | No filter (fallback) |
 | 4 | `100.64.0.2` | `adblock.dns.mullvad.net` | `GW_USA_2` | Ad block (fallback) |
 
-`DNS Server Override`: unchecked.
-`DNS Resolution Behavior`: Use local DNS (127.0.0.1), fall back to remote DNS Servers (Default).
-
-### Why this distribution
-
-- **Two filter tiers (family + fallbacks).** Unbound queries the fastest responder. The family-tier forwarders normally win because they are configured first and have a slight latency edge. If family-tier forwarders go dark together, the fallback tier still resolves. Filter consistency takes a small hit during fallback events; that trade-off is accepted in exchange for full resilience.
-
-- **Each gateway used by 2 entries.** If `GW_USA_1`'s tunnel wedges, entries 2 and 4 (both on `GW_USA_2`) still resolve. Symmetric for `GW_USA_2`.
-
-- **All entries stay inside Mullvad's CGNAT range (`100.64.0.0/10`).** No clearnet DNS, no leak to ISP. DNS privacy posture preserved.
+The reasoning at the time was two filter tiers for graceful degradation, two entries per gateway for tunnel redundancy, and everything inside Mullvad's CGNAT range so no clearnet DNS existed. The redundancy was illusory: none of the four had a route.
 
 ### pfSense constraint
 
@@ -132,14 +152,25 @@ All other Advanced Settings left at defaults.
 
 `System → Routing → Gateways`
 
-Each Mullvad gateway's Monitor IP changed from a public-internet IP to a Mullvad-internal IP that only responds when the tunnel's internal services are healthy:
+> [!WARNING]
+> **Reverted 2026-07-31.** This layer was rolled back to public anycast monitors. See "Why this was reverted" below.
 
-| Gateway | Old Monitor IP | New Monitor IP |
-|---|---|---|
-| `GW_USA_1` | `1.1.1.1` (Cloudflare) | `100.64.0.31` (Mullvad DNS, family tier) |
-| `GW_USA_2` | `9.9.9.9` (Quad9) | `100.64.0.32` (Mullvad DNS, family tier) |
+### Current configuration (2026-07-31)
 
-### Why
+| Gateway | Monitor IP |
+|---|---|
+| `GW_USA_1` | `1.1.1.1` (Cloudflare) |
+| `GW_USA_2` | `9.9.9.9` (Quad9) |
+
+Each must be public, on the far side of the tunnel, and unique per gateway.
+
+**A monitor that cannot fail is worse than no monitor.** On 2026-07-31 one gateway was found with its Monitor IP set to the firewall's own WireGuard interface address. dpinger was pinging the local kernel, so the gateway reported Online permanently, and `VPN_FAILOVER` could never promote the other tier. The dashboard showed a healthy green throughout. Proof of a correct monitor is a plausible RTT: if it reads 0 ms or blank, the packet is not leaving the box.
+
+### Why this was reverted
+
+In-tunnel monitors only work if the address is routable, and Mullvad's `100.64.0.x` addresses are not reachable as monitor targets in this configuration for the same reason they failed as forwarders. The blind spot the original design tried to close (tunnel handshake alive but Mullvad internals dead) is real, but it is now covered by Layer 4's resolver health probe instead, which tests the thing that actually matters end to end.
+
+### Original reasoning (superseded, kept for history)
 
 Public IPs (`1.1.1.1`, `9.9.9.9`) reach their destination over the WireGuard tunnel and out Mullvad's WAN. They report Online as long as the tunnel handshake is alive AND Mullvad's general egress works. They do NOT detect the case where Mullvad's internal services (specifically DNS) are unreachable while the tunnel handshake is otherwise healthy. That was a contributing factor in the 2026-06-04 incident: gateways showed Online while DNS was completely dead.
 
