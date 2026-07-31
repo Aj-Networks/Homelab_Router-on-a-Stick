@@ -29,7 +29,7 @@ nmap -sT -p 22,53,80,443 10.10.X.1
 
 ## 2. DNSBL verification
 
-From any pfBlockerNG-enabled VLAN (10, 20, 30, 50), see [pfblockerng.md](pfblockerng.md).
+From any pfBlockerNG-enabled VLAN (10, 20, 30, 50), see [pfblockerng.md](../services/pfblockerng.md).
 
 ```
 dig doubleclick.net @10.10.X.1
@@ -66,7 +66,7 @@ From any client VLAN, try a DoH resolver directly:
 curl -s -H 'accept: application/dns-message' 'https://1.1.1.1/dns-query?name=example.com&type=A' -o /tmp/resp
 ```
 
-**Pass:** connection times out or is refused (port 443 to `DOH_IPS` alias is blocked, see [firewall-rules.md](firewall-rules.md) rule #3 on VLAN 10, rule #2 on VLANs 20/30/40).
+**Pass:** connection times out or is refused (port 443 to `DOH_IPS` alias is blocked, see [firewall-rules.md](../network/firewall-rules.md) rule #3 on VLAN 10, rule #2 on VLANs 20/30/40).
 
 ---
 
@@ -131,7 +131,7 @@ tailscale ping 10.10.10.X    # should succeed per advertised routes
 ssh 10.10.50.1               # currently succeeds - flag for ACL tightening
 ```
 
-Record what reaches what; use this to drive the Tailscale ACL policy (see [tailscale.md](tailscale.md) when it exists).
+Record what reaches what; use this to drive the Tailscale ACL policy (see [tailscale.md](../services/tailscale.md) when it exists).
 
 ---
 

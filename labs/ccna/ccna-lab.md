@@ -226,7 +226,7 @@ One dedicated laptop on one access port covers ~75% of CCNA hands-on topics. Mul
 
 ## Backup
 
-Cisco device configs are exported via the existing backup workflow, see [`backup-procedure.md`](backup-procedure.md). For each device:
+Cisco device configs are exported via the existing backup workflow, see [`backup-procedure.md`](../../operations/backup-procedure.md). For each device:
 
 1. From console: `show running-config`, copy/paste output to text file
 2. Strip the passwords (or encrypt with `age` per the same policy as the GS308E binary)

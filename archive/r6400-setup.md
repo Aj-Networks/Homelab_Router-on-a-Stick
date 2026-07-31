@@ -19,7 +19,7 @@ The R6400 runs in **AP mode only** (routing/NAT/DHCP disabled, pfSense owns thos
 | WiFi security | WPA2-PSK [AES] on both 2.4 GHz and 5 GHz |
 | Guest network | Enabled, "allow access to local network" = OFF (AP-level isolation) |
 
-Cross-reference: [`vlan-assignments.md`](vlan-assignments.md), [`switch-port-map.md`](switch-port-map.md).
+Cross-reference: [`vlan-assignments.md`](../network/vlan-assignments.md), [`switch-port-map.md`](../network/switch-port-map.md).
 
 Secrets (admin password, WiFi password, SSIDs) live in the password manager, NOT in this repo.
 
@@ -138,5 +138,5 @@ Then:
 
 ## Related
 
-- VLAN 10 firewall context: [`firewall-rules.md`](firewall-rules.md)
+- VLAN 10 firewall context: [`firewall-rules.md`](../network/firewall-rules.md)
 - Why the R6400 is on VLAN 10 with AP-level guest isolation (and the limitation that creates): [`../docs/technical-guide.md`](../docs/technical-guide.md) section 25

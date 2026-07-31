@@ -82,7 +82,7 @@ If you prefer a GUI client:
 
 When set up, Tailscale lets you SSH and VNC into the Mac from anywhere (coffee shop, work, vacation) over an encrypted overlay network, no port forwards, no public IP needed.
 
-To be added when configured. See [`../tailscale.md`](../tailscale.md) for the existing lab Tailscale setup that this will join.
+To be added when configured. See [`../tailscale.md`](../../services/tailscale.md) for the existing lab Tailscale setup that this will join.
 
 Planned use:
 - Install Tailscale macOS app on the Mac Mini, sign in, enable as a node

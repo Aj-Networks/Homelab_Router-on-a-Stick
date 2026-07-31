@@ -52,10 +52,10 @@ Planned phases. Each becomes its own subdoc when built, not before.
 
 ## Related docs
 
-- [`../vlan-assignments.md`](../vlan-assignments.md) - VLAN map, where VLAN 20 fits
-- [`../switch-port-map.md`](../switch-port-map.md) - GS308E port-by-port plan
-- [`../firewall-rules.md`](../firewall-rules.md) - pfSense rules for inter-VLAN access to this host
-- [`../r6400-setup.md`](../r6400-setup.md) - Current AP, marked for replacement by UAP-AC-PRO managed by this Mac
-- [`../vpn-failover.md`](../vpn-failover.md) - VPN tunnels this host's traffic uses for outbound
-- [`../tailscale.md`](../tailscale.md) - Tailscale overlay, future remote-access path
-- [`../ccna-lab/`](../ccna-lab/) - CCNA lab, separate network segment (VLAN 40) but linked from this hub for cross-reference
+- [`../vlan-assignments.md`](../../network/vlan-assignments.md) - VLAN map, where VLAN 20 fits
+- [`../switch-port-map.md`](../../network/switch-port-map.md) - GS308E port-by-port plan
+- [`../firewall-rules.md`](../../network/firewall-rules.md) - pfSense rules for inter-VLAN access to this host
+- [`../r6400-setup.md`](../../archive/r6400-setup.md) - Current AP, marked for replacement by UAP-AC-PRO managed by this Mac
+- [`../vpn-failover.md`](../../vpn/vpn-failover.md) - VPN tunnels this host's traffic uses for outbound
+- [`../tailscale.md`](../../services/tailscale.md) - Tailscale overlay, future remote-access path
+- [`../ccna-lab/`](../../labs/ccna/) - CCNA lab, separate network segment (VLAN 40) but linked from this hub for cross-reference

@@ -58,7 +58,7 @@ age -p -o switch-config-YYYY-MM-DD.cfg.age <raw-cfg-file>
 
 1. Factory-reset the switch (`Maintenance > Reset`)
 2. Upload the `.cfg` via `Maintenance > Restore Configuration`
-3. Cross-check against the screenshots and [switch-port-map.md](switch-port-map.md)
+3. Cross-check against the screenshots and [switch-port-map.md](../network/switch-port-map.md)
 
 ---
 
