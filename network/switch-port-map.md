@@ -41,11 +41,20 @@
 
 ## Wi-Fi to VLAN Mapping (via AP-TRUNK on Port 2)
 
-| SSID | Tagging | VLAN |
-|---|---|---|
-| VPN_WiFi | Untagged (rides native) | 10 Trusted |
-| Guest_WiFi | Tagged | 30 Guest |
-| NoVPN_WiFi | Tagged | 50 Mgmt |
+| SSID | Tagging | VLAN | UniFi "Network" setting |
+|---|---|---|---|
+| VPN_WiFi | Untagged (rides native) | 10 Trusted | **`Native`** |
+| Guest_WiFi | Tagged | 30 Guest | `Guest (30)` |
+| NoVPN_WiFi | Tagged | 50 Mgmt | `NoVPN (50)` |
+
+> [!CAUTION]
+> **The AP's tagging must match this port's membership, or throughput collapses silently.**
+>
+> Port 2 carries VLAN 10 as **untagged** (it is the PVID), so the VPN SSID must be set to `Native` in UniFi. If it is instead pointed at a VLAN-10 network object, the AP tags frames the switch returns untagged. Traffic still passes, no alarm fires, but the AP drops off its hardware-accelerated path and forwards in software. Measured cost on 2026-07-31: **27 Mbps instead of 519 Mbps**, with signal, PHY rate, channel utilization and retries all reading perfect.
+>
+> **Diagnostic:** if one SSID is slow, test a client on a different SSID on another VLAN on the same AP. Same radio, same moment, different VLAN isolates the fault in two minutes.
+>
+> **Never fix this by tagging VLAN 10 on port 2.** The AP's management address (`10.10.10.254`) rides untagged on the native VLAN; tagging it cuts AP management and recovery requires physical access. Always correct the mismatch on the UniFi side.
 
 ---
 
