@@ -146,6 +146,7 @@ Claims above are tested, not assumed. Procedures live in [testing-procedures.md]
 
 | Date | Change |
 |---|---|
+| **2026-07-31** | Wi-Fi throughput on the trusted VLAN restored from 27 Mbps to 519 Mbps. An 802.1Q tagging mismatch on the AP uplink (controller tagging a VLAN the switch port carries untagged) pushed the access point off its hardware forwarding path into software bridging. Traffic passed correctly throughout and every RF metric read healthy, so nothing ever alarmed. Found by testing a client on a second SSID on a different VLAN, same AP and same moment. Guidance in [switch-port-map.md](network/switch-port-map.md). |
 | **2026-07-31** | Six weeks of IDS false positives closed at root cause. Measuring the alert distribution showed one ruleset (`stream-events.rules`) generating ~99.5% of ~980k alerts by flagging normal VPN-tunnel TCP behavior; it is now disabled lab-wide and replaced with curated known-bad-indicator rulesets rolled out detect-first. |
 | **2026-07-31** | Three latent faults found and fixed on rebuilt WireGuard interfaces: a self-referencing gateway monitor that made failover impossible, a missing MTU clamp causing a PMTU black hole, and a DNS forwarder with no route. Distilled into a tunnel build checklist in [vpn-failover.md](vpn/vpn-failover.md). |
 | **2026-06-04** | DNS resilience rebuilt as a four-layer defense after a resolver soft-hang took down LAN DNS. Design later corrected when parts of it were disproven under test; both versions are documented in [dns-resilience.md](vpn/dns-resilience.md). |
