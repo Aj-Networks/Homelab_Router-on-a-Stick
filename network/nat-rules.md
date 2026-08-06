@@ -50,3 +50,22 @@ There are **zero explicit WAN outbound NAT rules**, this is the foundation of th
 ## Adding rules for a new tunnel
 
 When adding a third or replacement tunnel, copy the existing 6 rules from one tier, change Interface and NAT Address to the new `INT_USA_<N>`, update the Description suffix. Repeat for every VLAN subnet. Outbound NAT does NOT support gateway groups, so each VPN interface needs its own complete set of 6 rules.
+
+> [!CAUTION]
+> **Replacing a tunnel orphans its NAT rules, and the failure is silent and partial.**
+>
+> Deleting a VPN interface does not delete the outbound NAT rules bound to it. They remain in the list with an empty Interface column and a raw `optNNip` NAT address, still looking plausible at a glance. Any subnet whose only rules are orphaned has no working NAT and therefore no internet, while subnets that were rebuilt keep working normally.
+>
+> Observed 2026-07-31: after a tunnel swap, only `10.10.1.0/24` and `10.10.10.0/24` had been recreated. VLAN 20, 30 and 40 were dead for an unknown period. It surfaced only because someone tried the guest Wi-Fi. VLAN 50 masked the problem further by continuing to work, since it egresses via the WAN rule rather than a tunnel.
+>
+> **Verify with the packet filter, not the UI**, because the UI shows orphans as if they were rules:
+>
+> ```sh
+> pfctl -sn | grep -E '10\.10\.(1|10|20|30|40|50)\.0'
+> ```
+>
+> Expect every subnet listed twice, once per tunnel interface. Anything missing has no NAT.
+>
+> **Fastest repair:** edit each orphaned rule and change the Interface dropdown and NAT Address to the new tunnel rather than deleting and re-adding. Delete leftovers only after the replacements are live and verified.
+>
+> **After any tunnel change, test one client on every VLAN.** A VLAN with no users is a VLAN whose outage you will discover months later.
