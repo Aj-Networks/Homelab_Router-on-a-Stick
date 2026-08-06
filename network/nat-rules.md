@@ -56,7 +56,7 @@ When adding a third or replacement tunnel, copy the existing 6 rules from one ti
 >
 > Deleting a VPN interface does not delete the outbound NAT rules bound to it. They remain in the list with an empty Interface column and a raw `optNNip` NAT address, still looking plausible at a glance. Any subnet whose only rules are orphaned has no working NAT and therefore no internet, while subnets that were rebuilt keep working normally.
 >
-> Observed 2026-07-31: after a tunnel swap, only `10.10.1.0/24` and `10.10.10.0/24` had been recreated. VLAN 20, 30 and 40 were dead for an unknown period. It surfaced only because someone tried the guest Wi-Fi. VLAN 50 masked the problem further by continuing to work, since it egresses via the WAN rule rather than a tunnel.
+> Observed 2026-08-06: after a tunnel swap, only `10.10.1.0/24` and `10.10.10.0/24` had been recreated. VLAN 20, 30 and 40 were dead for an unknown period. It surfaced only because someone tried the guest Wi-Fi. VLAN 50 masked the problem further by continuing to work, since it egresses via the WAN rule rather than a tunnel.
 >
 > **Verify with the packet filter, not the UI**, because the UI shows orphans as if they were rules:
 >

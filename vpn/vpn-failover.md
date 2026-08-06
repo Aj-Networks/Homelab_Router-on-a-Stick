@@ -49,7 +49,7 @@ All internal firewall rules use `VPN_FAILOVER` as their gateway, not individual 
 
 Each gateway needs a **unique** Monitor IP. pfSense installs one static route per Monitor IP pinning it to that gateway's interface. Two gateways sharing the same Monitor IP collide - the static route pins to only one of them, the other's monitor traffic exits the wrong tunnel, and that gateway falsely shows Offline.
 
-### Verified working configuration (current, 2026-07-31)
+### Verified working configuration (current, 2026-08-06)
 
 | Gateway | Monitor IP | Notes |
 |---|---|---|
@@ -61,13 +61,13 @@ ICMP travels through each respective tunnel. No ISP leak: the WAN sees only encr
 Three properties are mandatory. The address must be **public**, must sit on the **far side of the tunnel**, and must be **unique per gateway**.
 
 > [!CAUTION]
-> **Never put the interface's own address in the Monitor IP field.** Found on 2026-07-31: a gateway had its Monitor IP set to the firewall's own WireGuard interface address, identical to the value in its Gateway field. dpinger was pinging the local kernel, so the gateway could never be marked Offline and the failover group could never promote the other tier. `Status > Gateways` showed a healthy green Online the entire time. pfSense does not warn about this.
+> **Never put the interface's own address in the Monitor IP field.** Found on 2026-08-06: a gateway had its Monitor IP set to the firewall's own WireGuard interface address, identical to the value in its Gateway field. dpinger was pinging the local kernel, so the gateway could never be marked Offline and the failover group could never promote the other tier. `Status > Gateways` showed a healthy green Online the entire time. pfSense does not warn about this.
 >
 > The tell is the RTT column. A correct monitor shows a plausible round trip (30-70 ms through a tunnel). A self-referencing one shows 0 ms or blank.
 
-### Superseded: Mullvad in-tunnel monitors (2026-06-04 to 2026-07-31)
+### Superseded: Mullvad in-tunnel monitors (2026-06-04 to 2026-08-06)
 
-The design between those dates used `100.64.0.31` and `100.64.0.32` as monitors, on the theory that an in-tunnel target proves Mullvad's internal network is healthy rather than just the handshake. Reverted on 2026-07-31: those addresses do not receive a usable route in this configuration, the same defect that made them fail as DNS forwarders. The blind spot they were meant to close is now covered by the resolver health probe in [`dns-resilience.md`](dns-resilience.md) Layer 4.
+The design between those dates used `100.64.0.31` and `100.64.0.32` as monitors, on the theory that an in-tunnel target proves Mullvad's internal network is healthy rather than just the handshake. Reverted on 2026-08-06: those addresses do not receive a usable route in this configuration, the same defect that made them fail as DNS forwarders. The blind spot they were meant to close is now covered by the resolver health probe in [`dns-resilience.md`](dns-resilience.md) Layer 4.
 
 ### Temporary monitor IPs during migration
 
@@ -98,7 +98,7 @@ Same per-server reuse problem - it is also reused across servers. Distinct IPs p
 Each tunnel gets its own DNS entry, mapped to its own gateway, so DNS follows the active VPN_FAILOVER tier without static-route collisions.
 
 > [!CAUTION]
-> **A gateway-bound DNS forwarder must have a route, and pfSense will not create one for you.** pfSense installs a host route for each gateway *Monitor IP*. It does not install one for a gateway-bound *DNS server* address. Found on 2026-07-31: `100.64.0.1` mapped to a tunnel gateway had no route in `netstat -rn` and had never resolved a single query. The second forwarder worked only because it happened to double as the other gateway's Monitor IP.
+> **A gateway-bound DNS forwarder must have a route, and pfSense will not create one for you.** pfSense installs a host route for each gateway *Monitor IP*. It does not install one for a gateway-bound *DNS server* address. Found on 2026-08-06: `100.64.0.1` mapped to a tunnel gateway had no route in `netstat -rn` and had never resolved a single query. The second forwarder worked only because it happened to double as the other gateway's Monitor IP.
 >
 > Use the same address as that gateway's Monitor IP, or verify the route exists. Then test each forwarder individually, because a dead forwarder is invisible while the other one answers:
 >
@@ -244,9 +244,9 @@ Use the naming convention from the top of this doc. The numeric tier is assigned
 
 ---
 
-## Post-build verification (added 2026-07-31)
+## Post-build verification (added 2026-08-06)
 
-A replacement interface inherits nothing from the one it replaces. On 2026-07-31 three separate faults were found on interfaces rebuilt the day before, and none of them produced a symptom that pointed at itself. Run all four checks before declaring a tunnel done.
+A replacement interface inherits nothing from the one it replaces. On 2026-08-06 three separate faults were found on interfaces rebuilt on 2026-07-30, and none of them produced a symptom that pointed at itself. Run all four checks before declaring a tunnel done.
 
 **1. Peers are actually up**
 
@@ -287,7 +287,7 @@ Both must return records. A forwarder that silently never answers stays invisibl
 
 Pick by measurement, not by regional reputation. Read the RTT for each candidate in `Status > Gateways` first, then run at least a dozen throughput tests on each, because a handful of runs will not separate a genuine difference from normal variance.
 
-On 2026-07-31 the Tier 1 exit was the slower of the two at 68 ms against 37 ms. Promoting the faster one held the average at roughly 470 Mbps but raised the floor from 240 to 340 Mbps and halved the spread from 660 to 320 Mbps across 21 runs. The average alone would have shown no improvement; the floor and the spread are what users actually feel.
+On 2026-08-06 the Tier 1 exit was the slower of the two at 68 ms against 37 ms. Promoting the faster one held the average at roughly 470 Mbps but raised the floor from 240 to 340 Mbps and halved the spread from 660 to 320 Mbps across 21 runs. The average alone would have shown no improvement; the floor and the spread are what users actually feel.
 
 ---
 

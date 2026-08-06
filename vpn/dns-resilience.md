@@ -84,9 +84,9 @@ A resilient DNS stack must:
 `System → General Setup → DNS Servers`
 
 > [!WARNING]
-> **Corrected 2026-07-31.** The original design below used Mullvad in-tunnel `100.64.0.x` addresses as forwarders. Testing proved those addresses **never resolved**. pfSense creates a host route for gateway *Monitor IPs*, not for gateway-bound *DNS server* addresses, so queries to `100.64.0.x` had no route out. The lab had been running on a single live forwarder while the config claimed several. The corrected configuration is below; the original is kept underneath for history.
+> **Corrected 2026-08-06.** The original design below used Mullvad in-tunnel `100.64.0.x` addresses as forwarders. Testing proved those addresses **never resolved**. pfSense creates a host route for gateway *Monitor IPs*, not for gateway-bound *DNS server* addresses, so queries to `100.64.0.x` had no route out. The lab had been running on a single live forwarder while the config claimed several. The corrected configuration is below; the original is kept underneath for history.
 
-### Current configuration (2026-07-31)
+### Current configuration (2026-08-06)
 
 | # | Address | Hostname | Gateway |
 |---|---|---|---|
@@ -153,9 +153,9 @@ All other Advanced Settings left at defaults.
 `System → Routing → Gateways`
 
 > [!WARNING]
-> **Reverted 2026-07-31.** This layer was rolled back to public anycast monitors. See "Why this was reverted" below.
+> **Reverted 2026-08-06.** This layer was rolled back to public anycast monitors. See "Why this was reverted" below.
 
-### Current configuration (2026-07-31)
+### Current configuration (2026-08-06)
 
 | Gateway | Monitor IP |
 |---|---|
@@ -164,7 +164,7 @@ All other Advanced Settings left at defaults.
 
 Each must be public, on the far side of the tunnel, and unique per gateway.
 
-**A monitor that cannot fail is worse than no monitor.** On 2026-07-31 one gateway was found with its Monitor IP set to the firewall's own WireGuard interface address. dpinger was pinging the local kernel, so the gateway reported Online permanently, and `VPN_FAILOVER` could never promote the other tier. The dashboard showed a healthy green throughout. Proof of a correct monitor is a plausible RTT: if it reads 0 ms or blank, the packet is not leaving the box.
+**A monitor that cannot fail is worse than no monitor.** On 2026-08-06 one gateway was found with its Monitor IP set to the firewall's own WireGuard interface address. dpinger was pinging the local kernel, so the gateway reported Online permanently, and `VPN_FAILOVER` could never promote the other tier. The dashboard showed a healthy green throughout. Proof of a correct monitor is a plausible RTT: if it reads 0 ms or blank, the packet is not leaving the box.
 
 ### Why this was reverted
 

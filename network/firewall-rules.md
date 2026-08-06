@@ -90,7 +90,7 @@ Per-VLAN rule chains as configured in pfSense 2.8.1. Rules are evaluated **top-t
 | 6 | Pass | any | VLAN50 net | any | any | Direct internet, no VPN |
 | 7 | Block | IPv6 | VLAN50 net | any | any | Drop all IPv6 |
 
-> **Revised 2026-07-31.** VLAN 50 previously carried `Pass TCP :443` (WebUI), `Pass TCP :22` (SSH), and an unrestricted catch-all granting reach into every other VLAN. All three were removed.
+> **Revised 2026-08-06.** VLAN 50 previously carried `Pass TCP :443` (WebUI), `Pass TCP :22` (SSH), and an unrestricted catch-all granting reach into every other VLAN. All three were removed.
 >
 > **Why.** VLAN 50 is broadcast as a Wi-Fi SSID for no-VPN access. Those rules therefore handed the pfSense admin UI, a shell, and every device on every VLAN to anyone holding that Wi-Fi password, from beyond the building. The wired escape hatch on switch port 8 required physical presence; the SSID did not, and the firewall cannot distinguish a wired client from a wireless one on the same VLAN.
 >
@@ -124,5 +124,5 @@ pfBlockerNG automatically creates floating permit rules allowing VLAN10_USERS, V
 - **RFC1918 block enforces hard VLAN isolation**, no cross-VLAN traffic without an explicit rule above it
 - **VPN_FAILOVER is the default gateway**, all passing traffic exits through Mullvad, not raw WAN
 - **IPv6 fully blocked**, eliminates tunnel leak vectors
-- **VLAN 50 is the only VPN exception**, intentional, direct WAN for diagnosis and for reaching services that block VPN exits. It holds no admin rights and no inter-VLAN reach (revised 2026-07-31)
+- **VLAN 50 is the only VPN exception**, intentional, direct WAN for diagnosis and for reaching services that block VPN exits. It holds no admin rights and no inter-VLAN reach (revised 2026-08-06)
 - **A privilege reachable over Wi-Fi is a privilege granted to anyone within radio range.** The firewall matches on source subnet, not on how a client joined, so any VLAN carried by an SSID must be scoped as if it were public

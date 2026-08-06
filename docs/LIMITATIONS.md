@@ -109,7 +109,7 @@ Clearing is safe and immediate; it only removes blocks:
 pfctl -t snort2c -T flush
 ```
 
-### Root cause, found 2026-07-31
+### Root cause, found 2026-08-06
 
 Measuring the alert distribution rather than investigating individual signatures:
 

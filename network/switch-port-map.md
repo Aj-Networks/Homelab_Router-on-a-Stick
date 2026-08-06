@@ -50,7 +50,7 @@
 > [!CAUTION]
 > **The AP's tagging must match this port's membership, or throughput collapses silently.**
 >
-> Port 2 carries VLAN 10 as **untagged** (it is the PVID), so the VPN SSID must be set to `Native` in UniFi. If it is instead pointed at a VLAN-10 network object, the AP tags frames the switch returns untagged. Traffic still passes, no alarm fires, but the AP drops off its hardware-accelerated path and forwards in software. Measured cost on 2026-07-31: **27 Mbps instead of 519 Mbps**, with signal, PHY rate, channel utilization and retries all reading perfect.
+> Port 2 carries VLAN 10 as **untagged** (it is the PVID), so the VPN SSID must be set to `Native` in UniFi. If it is instead pointed at a VLAN-10 network object, the AP tags frames the switch returns untagged. Traffic still passes, no alarm fires, but the AP drops off its hardware-accelerated path and forwards in software. Measured cost on 2026-08-06: **27 Mbps instead of 519 Mbps**, with signal, PHY rate, channel utilization and retries all reading perfect.
 >
 > **Diagnostic:** if one SSID is slow, test a client on a different SSID on another VLAN on the same AP. Same radio, same moment, different VLAN isolates the fault in two minutes.
 >
