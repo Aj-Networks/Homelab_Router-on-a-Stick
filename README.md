@@ -2,8 +2,7 @@
 
 # Homelab: pfSense Router-on-a-Stick
 
-**A privacy-first home network built from off-the-shelf gear.**
-*6 VLANs · dual VPN failover · layered kill switch · verified zero leaks*
+**Privacy-first home network. 6 VLANs, dual WireGuard failover, fail-closed by design.**
 
 ![pfSense](https://img.shields.io/badge/pfSense-2.8.1-orange?logo=pfsense&logoColor=white)
 ![UniFi](https://img.shields.io/badge/UniFi-U7%20Lite-blue?logo=ubiquiti&logoColor=white)
@@ -14,131 +13,135 @@
 
 </div>
 
-A single-firewall home network where no traffic leaves the house outside an encrypted tunnel. Six VLANs with default-deny segmentation, dual WireGuard tunnels with automatic failover, and a kill switch built from the absence of WAN egress NAT rather than a rule that could be misordered. Every design decision is documented with its reasoning, and every failure is written up in [LIMITATIONS.md](docs/LIMITATIONS.md).
+No traffic leaves this network outside an encrypted tunnel. The kill switch is the **absence of WAN egress NAT**, not a block rule, so a leak path would have to be created rather than merely permitted. Every VLAN routes through the firewall, which is what makes default-deny segmentation enforceable.
+
+Configuration is documented with its reasoning. Failures are documented in [LIMITATIONS.md](docs/LIMITATIONS.md) with root cause and reattempt criteria.
 
 ---
 
-## At a glance
+## Specification
 
 | | |
 |---|---|
-| **VLANs** | 6 (Trusted, IoT, Guest, Lab, Mgmt, Native) |
-| **VPN tunnels** | 2 (Mullvad WireGuard, dual-region, automatic failover) |
-| **Kill switch layers** | 7 (NAT, DoH/DoT block, port 53 block, RFC1918 block, IPv6 block, DNS lockdown, no WAN egress NAT) |
-| **Leak testing** | DNS, IP, WebRTC verified clean (ipleak.net, Mullvad Check) |
-| **IDS** | Suricata on 6 interfaces, curated known-bad rulesets |
-| **Hardware cost** | ~$1,960 |
+| Firewall | Protectli FW6E, pfSense 2.8.1 |
+| Switch | Netgear GS308E v4, 802.1Q trunk |
+| Wi-Fi | UniFi U7 Lite, 3 VLAN-tagged SSIDs |
+| VPN | Mullvad WireGuard, 2 tunnels, gateway-group failover |
+| IDS / DNS filter | Suricata (6 interfaces), pfBlockerNG-devel |
+| Overlay | Tailscale, ACL-scoped to one subnet |
+| Application host | Mac Mini M4, Docker |
+| Practice lab | Cisco Catalyst 3560 + 1941 ISR, isolated on VLAN 40 |
+| Build cost | ~$1,960 |
 
 ---
 
-## Architecture
+## Topology
 
 <p align="center">
   <img src="assets/diagrams/network-topology.png" alt="Network topology" width="100%"/>
 </p>
 
-### Stack
-
-| Layer | Tool |
-|---|---|
-| Firewall + Router | Protectli FW6E, pfSense 2.8.1 |
-| Switch | Netgear GS308E v4 (802.1Q trunking) |
-| Wi-Fi | UniFi U7 Lite (WiFi 7, VLAN-tagged SSIDs) |
-| VPN | Mullvad WireGuard, dual-tunnel failover group |
-| IDS / DNS filtering | Suricata + pfBlockerNG-devel |
-| Overlay / remote access | Tailscale (scoped ACLs) |
-| Application host | Mac Mini M4, 24/7 Docker host |
-| Practice lab | Cisco Catalyst 3560 + Cisco 1941 ISR, isolated on VLAN 40 |
-
-### VLAN and IP plan
+### Segmentation
 
 <p align="center">
   <img src="assets/diagrams/vlan-ip-detail.png" alt="VLAN and IP detail" width="100%"/>
 </p>
 
-Subnet convention: the third octet matches the VLAN ID, so logs read at a glance.
+Third octet matches the VLAN ID. `10.10.20.5` is unambiguously a VLAN 20 host.
+
+| VLAN | Purpose | Egress |
+|---|---|---|
+| 10 | Trusted users | VPN tunnel |
+| 20 | IoT | VPN tunnel |
+| 30 | Guest | VPN tunnel, no LAN access |
+| 40 | Cisco lab | Isolated, excluded from IDS |
+| 50 | Management | **Direct WAN, no tunnel.** No admin rights, no inter-VLAN reach |
 
 ---
 
-## Privacy design
+## Egress controls
 
-Seven independent defenses. A packet must bypass all of them to leak.
+Seven layers. A packet must defeat all of them to leave unencrypted.
 
-1. **NAT lock.** Outbound NAT is bound to the VPN interfaces only. No WAN egress NAT rules exist, so a leak path would have to be created, not merely allowed.
-2. **Encrypted-DNS block.** DoH/DoT egress (443/853 to known resolvers) is blocked; applications cannot bypass the resolver.
-3. **Plain-DNS block.** Port 53 to WAN is blocked for all clients.
-4. **Inter-VLAN default deny.** RFC1918 space is blocked between segments; each VLAN sees only what it is explicitly allowed.
-5. **IPv6 dropped.** No v6 leak vector until the design covers it deliberately.
-6. **DNS inside the tunnel.** The resolver forwards only through the active VPN gateway; the ISP sees encrypted UDP and nothing else.
-7. **Fail closed.** Both tunnels down means all traffic drops. No fallback to WAN, no silent failure.
+| # | Control | Mechanism |
+|---|---|---|
+| 1 | NAT lock | Outbound NAT bound to WireGuard interfaces. One WAN NAT rule exists, for VLAN 50 |
+| 2 | Encrypted DNS block | DoH and DoT to known resolvers blocked on 443 and 853 |
+| 3 | Plain DNS block | Port 53 to WAN blocked for all clients |
+| 4 | Inter-VLAN deny | RFC1918 blocked between segments, allow-listed per rule |
+| 5 | IPv6 drop | All IPv6 dropped. A dual-stack kill switch doubles rule surface with silent failure modes |
+| 6 | Resolver lock | Unbound forwards only through the active VPN gateway |
+| 7 | Fail closed | Both tunnels down means traffic drops. No WAN fallback |
 
-The one deliberate exception: VLAN 50 egresses directly, providing an admin path to the firewall when the tunnels themselves are the problem.
+VLAN 50 is the deliberate exception: direct WAN so the firewall stays reachable when the tunnels themselves are the fault. It holds no administrative privileges.
 
 ---
 
 ## Documentation
 
-Each document covers one concern and explains the reasoning, not just the configuration.
+**Network**
 
-### Network design
-
-| Doc | Scope |
+| Document | Scope |
 |---|---|
 | [vlan-assignments.md](network/vlan-assignments.md) | Interface, VLAN and subnet map |
-| [switch-port-map.md](network/switch-port-map.md) | GS308E port allocation (locked layout) |
-| [firewall-rules.md](network/firewall-rules.md) | Per-VLAN rule chains |
-| [nat-rules.md](network/nat-rules.md) | The outbound NAT design behind the kill switch |
+| [switch-port-map.md](network/switch-port-map.md) | Port allocation, AP trunk tagging |
+| [firewall-rules.md](network/firewall-rules.md) | Per-VLAN rule chains and ordering |
+| [nat-rules.md](network/nat-rules.md) | Outbound NAT design behind the kill switch |
 
-### VPN and DNS
+**VPN and DNS**
 
-| Doc | Scope |
+| Document | Scope |
 |---|---|
-| [vpn-failover.md](vpn/vpn-failover.md) | WireGuard tunnels, gateway groups, tunnel build checklist and post-build verification |
-| [dns-resilience.md](vpn/dns-resilience.md) | Four-layer DNS resilience, including what failed and was corrected |
+| [vpn-failover.md](vpn/vpn-failover.md) | Tunnels, gateway groups, build checklist, post-build verification |
+| [dns-resilience.md](vpn/dns-resilience.md) | Four-layer resilience, including the parts later disproven under test |
 
-### Services
+**Services**
 
-| Doc | Scope |
+| Document | Scope |
 |---|---|
-| [pfblockerng.md](services/pfblockerng.md) | DNSBL groups and update policy |
-| [tailscale.md](services/tailscale.md) | Overlay routes, ACLs, tag policy |
-| [mac-mini/](services/mac-mini/) | Docker host setup and remote access |
+| [pfblockerng.md](services/pfblockerng.md) | DNSBL groups, sinkhole VIP, update policy |
+| [tailscale.md](services/tailscale.md) | Routes, ACLs, tag policy |
+| [mac-mini/](services/mac-mini/) | Docker host, remote access |
 
-### Operations
+**Operations**
 
-| Doc | Scope |
+| Document | Scope |
 |---|---|
-| [backup-procedure.md](operations/backup-procedure.md) | Encrypted config backup and restore |
-| [testing-procedures.md](operations/testing-procedures.md) | Repeatable verification: isolation matrix, kill-switch drill, failover drill, leak tests |
+| [backup-procedure.md](operations/backup-procedure.md) | Encrypted export and restore |
+| [testing-procedures.md](operations/testing-procedures.md) | Isolation matrix, kill-switch drill, failover drill, leak tests |
 
-### Reference
+**Reference**
 
-| Doc | Scope |
+| Document | Scope |
 |---|---|
-| [LIMITATIONS.md](docs/LIMITATIONS.md) | Post-mortems: hardware ceilings, design constraints, incidents and their root causes |
-| [technical-guide.md](docs/technical-guide.md) | Full 29-section writeup of the build, aimed at readers learning the stack |
-| [docs/exports/](docs/exports/) | PDF and DOCX exports of the architecture and manuals |
-| [labs/ccna/](labs/ccna/) | Cisco practice lab (CCNA preparation, isolated on VLAN 40) |
-| [archive/](archive/) | Docs for retired hardware, kept for reference |
+| [LIMITATIONS.md](docs/LIMITATIONS.md) | Post-mortems: hardware ceilings, design constraints, root causes |
+| [technical-guide.md](docs/technical-guide.md) | 29-section build writeup |
+| [docs/exports/](docs/exports/) | PDF and DOCX exports |
+| [labs/ccna/](labs/ccna/) | Cisco practice lab, VLAN 40 |
+| [archive/](archive/) | Retired hardware documentation |
 
 ---
 
 ## Verification
 
-Claims above are tested, not assumed. Procedures live in [testing-procedures.md](operations/testing-procedures.md).
+Procedures in [testing-procedures.md](operations/testing-procedures.md).
 
-- Zero IP / DNS / WebRTC leaks: [ipleak.net](assets/screenshots/ipleak.png) · [Mullvad Check](assets/screenshots/mullvad.png)
-- VPN failover: primary tunnel disabled, secondary promoted, no traffic escapes during the transition
-- Inter-VLAN isolation: cross-VLAN reachability tested per the isolation matrix
-- Kill switch: both tunnels down, all client traffic drops, no WAN fallback
+| Test | Result |
+|---|---|
+| IP, DNS and WebRTC leak | Clean. [ipleak.net](assets/screenshots/ipleak.png), [Mullvad Check](assets/screenshots/mullvad.png) |
+| VPN failover | Tier 1 disabled, Tier 2 promoted, no egress during transition |
+| Inter-VLAN isolation | Cross-VLAN reachability blocked per matrix |
+| Kill switch | Both tunnels down, all client traffic dropped, no WAN fallback |
 
 ---
 
-## Known limitations
+## Limitations
 
-- **Single firewall, single point of failure.** No HA pair; an accepted trade-off at home scale.
-- **Switch hardware ceiling.** The GS308E v4 has no management-VLAN capability, which caps trunk hardening below the enterprise pattern. Full post-mortem and reattempt criteria in [LIMITATIONS.md](docs/LIMITATIONS.md).
-- **IDS blocking is global, not per-interface.** Suricata's block table applies firewall-wide; the constraint and the operating policy that came out of it are documented in [LIMITATIONS.md](docs/LIMITATIONS.md).
+| Limitation | Detail |
+|---|---|
+| Single firewall | No HA pair. `igb4` reserved for a future CARP peer |
+| Switch tier | GS308E v4 has no management VLAN, no ACLs, no SSH. Caps trunk hardening. [Post-mortem](docs/LIMITATIONS.md) |
+| IDS blocking is global | The Suricata block table applies firewall-wide, not per interface. [Post-mortem](docs/LIMITATIONS.md) |
 
 ---
 
@@ -146,12 +149,11 @@ Claims above are tested, not assumed. Procedures live in [testing-procedures.md]
 
 | Date | Change |
 |---|---|
-| **2026-08-06** | Administrative privileges removed from the management VLAN. That segment is broadcast as a Wi-Fi SSID for no-VPN access, and it carried pass rules for the firewall admin interface, SSH, and unrestricted reach into every other VLAN. Anyone with the Wi-Fi password held all three, from beyond the building, because a firewall matches on source subnet and cannot distinguish a wired client from a wireless one. Rules removed and private address space blocked, leaving the segment with DNS, gateway ping and direct internet. Admin access is now the trusted VLAN plus two physically-gated paths, verified reachable before anything was removed. |
-| **2026-08-06** | Orphaned outbound NAT rules found after a tunnel replacement. Deleting a VPN interface leaves its NAT rules in place, pointing at nothing, still rendering as valid entries in the UI. Three VLANs had been without internet for an unknown period while the rest of the network behaved normally. Found only because a guest device failed. Verification now uses `pfctl -sn` against the running packet filter rather than the interface that hid the problem. |
-| **2026-08-06** | Wi-Fi throughput on the trusted VLAN restored from 27 Mbps to 519 Mbps. An 802.1Q tagging mismatch on the AP uplink (controller tagging a VLAN the switch port carries untagged) pushed the access point off its hardware forwarding path into software bridging. Traffic passed correctly throughout and every RF metric read healthy, so nothing ever alarmed. Found by testing a client on a second SSID on a different VLAN, same AP and same moment. Guidance in [switch-port-map.md](network/switch-port-map.md). |
-| **2026-08-06** | Six weeks of IDS false positives closed at root cause. Measuring the alert distribution showed one ruleset (`stream-events.rules`) generating ~99.5% of ~980k alerts by flagging normal VPN-tunnel TCP behavior; it is now disabled lab-wide and replaced with curated known-bad-indicator rulesets rolled out detect-first. |
-| **2026-08-06** | Three latent faults found and fixed on rebuilt WireGuard interfaces: a self-referencing gateway monitor that made failover impossible, a missing MTU clamp causing a PMTU black hole, and a DNS forwarder with no route. Distilled into a tunnel build checklist in [vpn-failover.md](vpn/vpn-failover.md). |
-| **2026-06-04** | DNS resilience rebuilt as a four-layer defense after a resolver soft-hang took down LAN DNS. Design later corrected when parts of it were disproven under test; both versions are documented in [dns-resilience.md](vpn/dns-resilience.md). |
+| **2026-08-06** | Management VLAN stripped of admin rights. It is broadcast as an SSID and carried pass rules for the firewall WebUI, SSH, and unrestricted inter-VLAN reach, so anyone with the Wi-Fi password held all three from outside the building. A firewall matches on source subnet and cannot distinguish wired from wireless on the same VLAN. Rules removed, RFC1918 blocked, out-of-band access verified reachable first. |
+| **2026-08-06** | Orphaned outbound NAT rules found after a tunnel replacement. Deleting a VPN interface leaves its NAT rules in place pointing at nothing, still rendering as valid in the UI. Three VLANs had no internet for an unknown period. Verification moved to `pfctl -sn` against the running packet filter. |
+| **2026-08-06** | Wi-Fi throughput on the trusted VLAN restored from 27 Mbps to 519 Mbps. An 802.1Q mismatch, the controller tagging a VLAN the switch port carries untagged, pushed the access point off hardware forwarding into software bridging. Traffic passed correctly and every RF metric read healthy, so nothing alarmed. Found by testing a second SSID on a different VLAN, same AP, same moment. |
+| **2026-08-06** | Six weeks of IDS false positives closed at root cause. One ruleset generated roughly 99.5% of ~980,000 alerts by flagging normal VPN-tunnel TCP behaviour. Disabled lab-wide, replaced with curated known-bad-indicator rulesets in detect-only mode. |
+| **2026-08-06** | Three latent faults on rebuilt WireGuard interfaces: a gateway monitoring its own interface address so failover could never fire, a missing MTU clamp causing a PMTU black hole, and a DNS forwarder with no route. Distilled into a build checklist in [vpn-failover.md](vpn/vpn-failover.md). |
 
 Full history in [CHANGELOG.md](CHANGELOG.md).
 
@@ -161,21 +163,25 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 
 | Item | Status |
 |---|---|
-| AP hardware upgrade (U7 Lite) | Done, May 2026 |
+| AP upgrade to Wi-Fi 7 | Done, May 2026 |
 | Guest VLAN tagging over trunk | Done, May 2026 |
-| Dedicated OOB management port | Done, May 2026 |
-| IDS threat-ruleset rollout to blocking interfaces | In progress, gated on a clean detect-only week |
-| Native VLAN 999 + dedicated mgmt VLAN | Blocked by switch hardware, see [LIMITATIONS.md](docs/LIMITATIONS.md) |
-| CCNA exam on the VLAN 40 practice lab | Scheduled, October 2026 |
-| Centralized syslog | Evaluating |
+| Dedicated out-of-band management port | Done, May 2026 |
+| IDS ruleset promotion to blocking interfaces | Gated on a clean detect-only period |
+| Egress filtering on the IoT VLAN | Planned |
+| Managed switch replacement | Planned. Unblocks native VLAN 999 and a dedicated management VLAN |
+| Native VLAN 999 and management VLAN | Blocked by current switch. [Detail](docs/LIMITATIONS.md) |
+| CCNA exam, VLAN 40 practice lab | Scheduled, October 2026 |
+| HA firewall pair | Under consideration |
 
 ---
 
 ## Background
 
-Built and maintained by a system administrator / network engineer with 7+ years across healthcare, education, and MSP environments (Active Directory, Intune, pfSense, HIPAA compliance). The lab exists to test ideas properly before they inform production work: default-deny segmentation, verifiable zero-leak defaults, and separation of firewall and application duties.
+System administrator and network engineer, 7+ years across healthcare, education and MSP environments. Active Directory, Intune, pfSense, HIPAA compliance.
 
-More projects: [ajayangdembe.com](https://www.ajayangdembe.com)
+This lab exists to test ideas properly before they inform production work: default-deny segmentation, verifiable zero-leak defaults, and separation of firewall and application duties.
+
+[ajayangdembe.com](https://www.ajayangdembe.com)
 
 ---
 
@@ -183,10 +189,10 @@ More projects: [ajayangdembe.com](https://www.ajayangdembe.com)
 
 MIT. See [LICENSE](LICENSE).
 
-Use, fork, and build on this freely. If you republish substantial parts, keep the copyright notice and a link back to this repository, as the license requires.
+Use and adapt freely. If you republish substantial parts, keep the copyright notice and link back, as the license requires.
 
 <div align="center">
 
-*Built by [Aj-Networks](https://github.com/Aj-Networks)*
+*[Aj-Networks](https://github.com/Aj-Networks)*
 
 </div>
