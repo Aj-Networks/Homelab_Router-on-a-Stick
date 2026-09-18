@@ -69,8 +69,8 @@ Revisit this hardening only when:
 
 - `network/switch-port-map.md`
 - `network/vlan-assignments.md`
-- `keep_local/ap.md`
-- `keep_local/backups/pfsense-2026-05-27-prevlan999.xml` (recovery backup used)
+- `keep_local/notes/ap.md`
+- `keep_local/backups/pfsense/` (the pre-attempt XML restored during recovery)
 - NETGEAR GS308E v4 user manual, document 202-12712-01 (available from netgear.com support downloads)
 
 ---
@@ -146,4 +146,4 @@ After any pfSense configuration restore, re-check `Block Offenders` and the Cate
 ### Files referenced
 
 - `operations/testing-procedures.md`
-- `keep_local/suricata-ips-false-positives/` (incident log, kept local: contains addresses)
+- `keep_local/incidents/suricata-ips-false-positives/` (incident log, kept local: contains addresses)

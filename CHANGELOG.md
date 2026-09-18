@@ -31,7 +31,7 @@ All notable changes to this project are documented here.
   - Port 7 SW1-CATALYST (Cisco lab uplink, VLAN 40; R1 plugs into SW1 directly)
   - Port 8 WAN-ESCAPE (VLAN 50)
 - Cascaded the locked layout into `docs/technical-guide.md` §9.1/§9.2, `labs/ccna/README.md`, `labs/ccna/ccna-lab.md`, `services/mac-mini/README.md` (Mac VLAN 20 migration plan shelved).
-- AP VLAN-tagged Wi-Fi root cause found (2026-05-27): the U7 Lite was tagging frames correctly all along. The downstream Netgear GS305 (unmanaged) in the path was stripping 802.1Q tags. Confirmed via tcpdump on the AP eth0 showing `vlan 30` tagged frames egressing the wire. Resolved by moving the AP cable to a direct GS308E port. Full session log in `keep_local/ap.md`.
+- AP VLAN-tagged Wi-Fi root cause found (2026-05-27): the U7 Lite was tagging frames correctly all along. The downstream Netgear GS305 (unmanaged) in the path was stripping 802.1Q tags. Confirmed via tcpdump on the AP eth0 showing `vlan 30` tagged frames egressing the wire. Resolved by moving the AP cable to a direct GS308E port. Full session log in `keep_local/notes/ap.md`.
 
 ### Pending (Part 1 close-out)
 - Move native VLAN on Port 1 from `1` -> `999` (black-hole) for trunk hardening
