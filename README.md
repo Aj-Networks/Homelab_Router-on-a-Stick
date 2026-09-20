@@ -49,13 +49,15 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 |---|---|
 | Firewall | Protectli FW6E, pfSense 2.8.1 |
 | Switch | Netgear GS308E v4 |
-| Wi-Fi | UniFi U7 Lite, three separate wireless networks |
+| Wi-Fi | UniFi U7 Lite, three separate wireless networks (upgraded from a Netgear R6400 in May 2026) |
 | VPN | Mullvad WireGuard, two tunnels with automatic failover |
 | Security monitoring | Suricata intrusion detection, pfBlockerNG DNS filtering |
 | Remote access | Tailscale, restricted to one segment |
 | Applications | Mac Mini M4 running Docker |
 | Practice lab | Cisco Catalyst 3560 and 1941 router, fully isolated |
-| Build cost | ~$1,960 |
+| Build cost | $3,999+ one time, plus ~$199/year recurring |
+
+> **This does not need to cost $4,000.** The same design runs on **$499 to $999** if you buy the firewall and switch used, keep an access point you already own, and use the free software this lab runs on: pfSense, Suricata, pfBlockerNG, WireGuard and Tailscale all cost nothing. The hardware here reflects choices made over two years for headroom and for learning, not the minimum to reproduce it.
 
 ---
 
