@@ -74,7 +74,7 @@ Traffic is split into six segments. Devices in one segment cannot reach another 
 | 10 | Trusted computers and phones | VPN tunnel |
 | 20 | Smart devices and printer | VPN tunnel |
 | 30 | Guests | VPN tunnel, no access to anything local |
-| 40 | Cisco practice lab | Isolated, no internet |
+| 40 | Cisco practice lab | VPN tunnel. Cannot reach any other segment |
 | 50 | Management | Direct, no VPN. Holds no admin rights |
 
 <details>
