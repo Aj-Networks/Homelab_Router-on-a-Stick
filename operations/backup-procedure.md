@@ -62,6 +62,16 @@ age -p -o switch-config-YYYY-MM-DD.cfg.age <raw-cfg-file>
 
 ---
 
+
+> [!CAUTION]
+> **Encrypt pfSense XML exports before they touch any synced folder.**
+>
+> A pfSense configuration export contains WireGuard private keys and administrator password hashes in plain text. A WireGuard `.conf` file contains a tunnel private key. If either sits unencrypted in a cloud-synced directory, a compromise of that cloud account is a compromise of the firewall and the VPN identity, with no need to touch the network.
+>
+> Encrypt on creation, then delete the plaintext. Sync services upload within seconds, so "encrypt it later" means it was already uploaded in the clear.
+>
+> Corrected 2026-09-20, after three exports and two live tunnel configs were found unencrypted in a synced folder.
+
 ## What stays out of git
 
 Per `.gitignore`:
