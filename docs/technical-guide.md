@@ -155,14 +155,16 @@ Each plane operates independently. A failure in one (e.g., a misconfigured firew
 |---|---|---|
 | **Protectli FW6E** (Intel i7, 16 GB Random Access Memory (RAM), 6× Intel `igb` Network Interface Card (NIC)) | Firewall / Router | Runs pfSense 2.8.1. Six 1 GbE ports, only `igb0` (WAN) and `igb1` (trunk) are active; `igb2`-`igb5` are reserved for future use (Out-of-Band, Lab Direct, High Availability, Expansion). |
 | **Netgear GS308E v4** | Managed L2 switch | Supports IEEE 802.1Q VLAN tagging via the proprietary "ProSafe Plus" Windows utility. 8 ports. |
-| **Netgear R6400** | Wireless Access Point (AP) | Set to AP-only mode (routing disabled). Cannot do per-Service Set Identifier (SSID) VLAN tagging, see [§ 25](#25-trade-offs-and-limitations). |
+| **UniFi U7 Lite** | Wireless Access Point (AP) | **Current, since May 2026.** Wi-Fi 7, per-SSID VLAN tagging, managed by a UniFi controller. Replaced the Netgear R6400 below. |
+| ~~**Netgear R6400**~~ | Wireless AP, **retired May 2026** | Ran AP-only mode with routing disabled. Could not do per-Service Set Identifier (SSID) VLAN tagging, which forced guest traffic onto VLAN 10. Kept in this table as build history; setup notes preserved in [`archive/r6400-setup.md`](../archive/r6400-setup.md). |
 | **Cisco Catalyst 3560** + **Cisco 1900** | Lab study gear | Powered down most of the time; isolated on VLAN 40 when active. |
 
 ### 5.1 Why this hardware
 
 - **Protectli FW6E**, passive cooling, FreeBSD-friendly Intel NICs, enough horsepower for Suricata and pfBlockerNG concurrent with WireGuard at 1 Gbps.
 - **GS308E**, cheapest reliable 802.1Q-capable switch at the time of build. Trade-off: no Simple Network Management Protocol (SNMP), no Secure Shell (SSH), config is binary.
-- **R6400**, already on hand. Known limitation: not VLAN-aware. See § 25 and § 27 for the upgrade plan.
+- **U7 Lite**, chosen to close the guest-VLAN gap the R6400 could not. Per-SSID tagging means guest, trusted and management wireless each land on their own segment.
+- **R6400** (retired), was already on hand at build time. Not VLAN-aware, which made guest isolation impossible at Layer 2. Replaced May 2026.
 
 ---
 
@@ -349,7 +351,7 @@ pfSense runs a **DHCP server** on each VLAN sub-interface. When a device boots, 
 | Device | MAC | IP | VLAN | Reason |
 |---|---|---|---|---|
 | Netgear GS308E switch | (configured) | 10.10.1.100 | 1 | Predictable management address |
-| Netgear R6400 AP | (configured) | 10.10.10.254 | 10 | Predictable AP address |
+| UniFi U7 Lite AP | (configured) | 10.10.10.254 | 10 | Predictable AP address. Was the Netgear R6400 until May 2026 |
 
 Static DHCP reservations are preferred over manually-configured static IPs because they keep all address bookkeeping in one place (pfSense) and survive a device reset.
 
@@ -924,11 +926,11 @@ This is the core property of **defense in depth**: redundancy across orthogonal 
 
 ## 25. Trade-offs and Limitations
 
-### 25.1 Guest Wi-Fi shares VLAN 10
+### 25.1 Guest Wi-Fi shares VLAN 10 (RESOLVED May 2026)
 
-The Netgear R6400 cannot do per-SSID 802.1Q tagging. Guests technically land on VLAN 10 with AP-level client isolation enabled. AP isolation prevents guest-to-guest direct traffic but does **not** prevent a guest device on the same Layer-2 broadcast domain as the user PCs from sniffing or attempting Address Resolution Protocol (ARP) spoofing. **This is the largest residual gap.**
+**Original limitation, kept for build history:** the Netgear R6400 could not do per-SSID 802.1Q tagging. Guests landed on VLAN 10 with AP-level client isolation enabled. That prevented guest-to-guest traffic but did **not** stop a guest device on the same Layer-2 broadcast domain as the user PCs from sniffing or attempting Address Resolution Protocol (ARP) spoofing. It was the largest residual gap in the design.
 
-Fix path: replace the R6400 with a VLAN-aware AP (UniFi U6-Lite, TP-Link EAP245, or similar).
+**Resolution:** replaced with a UniFi U7 Lite in May 2026. Guest, trusted and management wireless now tag to VLAN 30, 10 and 50 respectively, and guest traffic never touches the trusted segment.
 
 ### 25.2 No Wide Area Network (WAN) High Availability
 
@@ -1002,7 +1004,7 @@ A brownout drops the VPN tunnels mid-session. The kill switch should hold during
 | pfBlockerNG DNSBL + IPv4 feeds | Done | 6 DNSBL groups, 3 IPv4 deny groups, daily updates |
 | Backup procedure | Done | XML + age-encrypted CFG; quarterly restore drill on schedule |
 | Repeatable test procedures | Done | 10 tests, cadence defined |
-| AP hardware upgrade | On hold | Closes biggest residual gap (guest VLAN) |
+| AP hardware upgrade | **Done, May 2026** | UniFi U7 Lite replaced the R6400. Closed the guest VLAN gap |
 | Centralized logging | Exploring | Syslog → Loki/Grafana or ELK |
 | Switch port hardening | Planned | Move unused ports to a dead VLAN |
 | WireGuard key rotation schedule | Planned | 90/180-day rotation cadence |
