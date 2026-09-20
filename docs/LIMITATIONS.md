@@ -141,7 +141,19 @@ Promotion of threat rulesets to the blocking VLAN interfaces is gated on one wee
 
 ### Operational note
 
-After any pfSense configuration restore, re-check `Block Offenders` and the Categories tab per interface. A restore on 2026-07-30 silently re-enabled blocking that a June fix had turned off, which is what triggered the third incident.
+After any pfSense configuration restore, re-check `Block Offenders` and the rule categories per interface. Verify against the stored configuration rather than the web interface, which has twice shown the intended state while the configuration file disagreed:
+
+```sh
+sed -n '/<suricata>/,/<\/suricata>/p' /conf/config.xml | grep -E "<descr>|<blockoffenders>"
+```
+
+### Recurrence and detection
+
+This condition returned twice through configuration restores, in July and again in September 2026. Each restore reverted a verified fix, and the second ran undetected for roughly six weeks.
+
+The corrective measure was not another configuration change but a detector: an hourly cron job writing a warning to the system log whenever the block table is non-empty, tested against a reserved documentation address before being relied upon.
+
+**A fix that can be silently reverted is not complete until something detects the reversion.** Three prior fixes were technically correct and each was undone without notice.
 
 ### Files referenced
 
