@@ -13,9 +13,29 @@
 
 </div>
 
-Six isolated network segments, two VPN tunnels with automatic failover, and a kill switch that works by **leaving something out** rather than blocking it: there are no rules permitting unencrypted traffic to reach the internet, so a leak would have to be deliberately created.
+Six isolated segments, two VPN tunnels with automatic failover, and a kill switch built from the **absence** of a rule rather than the presence of one. There are no rules permitting unencrypted traffic to reach the internet, so a leak would have to be deliberately created rather than merely allowed.
 
-Every design choice is documented with its reasoning. Every failure is written up with its root cause.
+The interesting part of this repository is not the configuration. It is what happened when the configuration was wrong.
+
+---
+
+## How this lab is run
+
+Four practices, each adopted after something failed.
+
+**Verify against the stored configuration, not the interface.**
+Twice, the web interface displayed the intended state while the underlying configuration said otherwise. Verification now reads the config file directly. One command replaced an hour of screenshots.
+
+**Anything silently reversible needs a detector.**
+Three separate fixes were correct when applied and were later undone without notice, one running six weeks before anyone noticed. The fourth attempt added an hourly check that writes to the system log, tested against a reserved address before being relied upon. A fix that can be silently reverted is not complete until something detects the reversion.
+
+**Measure the distribution before chasing the signature.**
+Six weeks of security incidents ended when the alert log was counted rather than read: one rule set produced 99.5% of roughly 980,000 alerts, by flagging normal VPN behaviour as suspicious. One command answered in seconds what six weeks of investigation had not.
+
+**Accept risk explicitly, with criteria for revisiting it.**
+Where a control is absent, the threat model, the compensating controls, and the conditions that would change the decision are written down. See [LIMITATIONS.md](docs/LIMITATIONS.md) section 3 for a worked example.
+
+Failures are documented with root cause and reattempt criteria, including the ones that were my own mistakes. [LIMITATIONS.md](docs/LIMITATIONS.md) exists for that purpose.
 
 ---
 
@@ -23,18 +43,18 @@ Every design choice is documented with its reasoning. Every failure is written u
 
 | Date | Change |
 |---|---|
-| **2026-09-20** | Intrusion detection was silently blocking legitimate services (Apple, Meta, Cloudflare) after a configuration restore quietly undid an earlier fix. It ran unnoticed for six weeks, appearing as intermittent Wi-Fi slowness. Blocking disabled, and an hourly check added so a silent reversion cannot happen again. |
-| **2026-08-06** | Wi-Fi on the main network ran at 27 Mbps instead of 519. The access point and the switch disagreed about how one network segment was labelled, which pushed the AP into a slow software path. Every signal metric read perfectly healthy, so nothing alarmed. Found by comparing two Wi-Fi networks on the same radio at the same moment. |
+| **2026-09-20** | Intrusion detection was silently blocking legitimate services after a configuration restore undid an earlier fix. It ran unnoticed for six weeks, appearing only as intermittent Wi-Fi slowness, because blocked packets are dropped silently and clients wait out a timeout rather than failing fast. Blocking disabled, and an hourly detector added. |
+| **2026-08-06** | Wi-Fi on the trusted segment ran at 27 Mbps instead of 519. The access point and the switch disagreed about how one segment was labelled, pushing the AP into a slow software path. Every signal metric read healthy, so nothing alarmed. Found by comparing two wireless networks on the same radio at the same moment. |
 
 <details>
 <summary><b>See more</b></summary>
 
 | Date | Change |
 |---|---|
-| **2026-08-06** | Removed administrative access from the management segment. It is broadcast as a Wi-Fi network, so anyone with that password reached the firewall's admin interface and every device on the network, from outside the building. |
-| **2026-08-06** | Found network address translation rules left pointing at a deleted VPN tunnel. Three segments had no internet for an unknown period while the rest of the network behaved normally. |
-| **2026-08-06** | Six weeks of false security alerts traced to a single rule set producing 99.5% of roughly 980,000 alerts, by flagging normal VPN behaviour as suspicious. Replaced with rules that match known threats instead. |
-| **2026-08-06** | Three hidden faults on rebuilt VPN tunnels: a health check watching itself so failover could never trigger, a missing packet-size limit, and a DNS server with no route to reach it. |
+| **2026-09-20** | Wireless raised to WPA2/WPA3 with Protected Management Frames, closing a path from radio range to the trusted segment. Configuration backups encrypted at rest; they had held tunnel private keys and password hashes in a cloud-synchronised folder. |
+| **2026-08-06** | Removed administrative access from the management segment. It is broadcast as a wireless network, so anyone with that password reached the firewall interface and every device, from outside the building. |
+| **2026-08-06** | Found address translation rules still pointing at a deleted tunnel. Three segments had no internet for an unknown period while everything else behaved normally. |
+| **2026-08-06** | Three latent faults on rebuilt tunnels: a health check watching itself so failover could never trigger, a missing packet-size limit, and a DNS server with no route to reach it. |
 | **2026-06-04** | Rebuilt DNS resilience after the resolver silently stopped answering. Parts of that design were later disproven under test and corrected. |
 
 </details>
@@ -57,7 +77,7 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 | Practice lab | Cisco Catalyst 3560 and 1941 router, fully isolated |
 | Build cost | $3,999+ one time, plus ~$199/year recurring |
 
-> **This does not need to cost $4,000.** The same design runs on **$499 to $999** if you buy the firewall and switch used, keep an access point you already own, and use the free software this lab runs on: pfSense, Suricata, pfBlockerNG, WireGuard and Tailscale all cost nothing. The hardware here reflects choices made over two years for headroom and for learning, not the minimum to reproduce it.
+> **This does not need to cost $4,000.** The same design runs on **$499 to $999** with a used firewall and switch, an access point you already own, and the free software this lab runs on: pfSense, Suricata, pfBlockerNG, WireGuard and Tailscale all cost nothing. The spend here reflects two years of choices for headroom and learning, not the minimum to reproduce it.
 
 ---
 
@@ -67,7 +87,7 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
   <img src="assets/diagrams/network-topology.png" alt="Network topology" width="100%"/>
 </p>
 
-Traffic is split into six segments. Devices in one segment cannot reach another unless a rule explicitly allows it.
+Devices in one segment cannot reach another unless a rule explicitly allows it.
 
 | Segment | Holds | Internet path |
 |---|---|---|
@@ -100,7 +120,7 @@ Seven independent controls. A packet has to defeat all of them to leave unencryp
 | Encrypted DNS block | Applications cannot use their own hidden DNS to bypass the firewall's |
 | Plain DNS block | Devices cannot query outside DNS servers directly |
 | Segment isolation | Private address ranges are blocked between segments by default |
-| IPv6 dropped | Supporting both address types doubles the rules and adds silent failure modes |
+| IPv6 dropped | Supporting both address families doubles the rule surface and adds silent failure modes |
 | Resolver lock | DNS queries leave only through the active VPN tunnel |
 | Fail closed | If both tunnels drop, traffic stops. There is no fallback to an unencrypted path |
 
@@ -110,7 +130,7 @@ Segment 50 is the deliberate exception. It reaches the internet directly so the 
 
 ## Verification
 
-Claims here are tested. Procedures in [testing-procedures.md](operations/testing-procedures.md).
+Claims here are tested rather than assumed. Procedures in [testing-procedures.md](operations/testing-procedures.md).
 
 | Test | Result |
 |---|---|
@@ -125,10 +145,11 @@ Claims here are tested. Procedures in [testing-procedures.md](operations/testing
 
 | Limitation | Detail |
 |---|---|
+| Observability | No metrics or dashboards. Every incident here was detected late, which is the open gap this lab most needs to close |
 | One firewall | No redundant pair. A port is reserved for a future second unit |
-| Switch capability | This model cannot separate management traffic onto its own segment, which caps how far the design can be hardened. [Post-mortem](docs/LIMITATIONS.md) |
-| Security blocking is network-wide | The intrusion detection block list applies everywhere at once, not per segment. This caused four outages and is documented in full. [Post-mortem](docs/LIMITATIONS.md) |
-| No second factor on the firewall login | pfSense offers none natively, in either edition. Adding one means running a separate authentication server. Risk accepted for a single-occupant network with no inbound exposure, with the reasoning and reattempt criteria written down. [Detail](docs/LIMITATIONS.md) |
+| Switch capability | This model cannot separate management traffic onto its own segment, capping how far the design can be hardened. [Post-mortem](docs/LIMITATIONS.md) |
+| Security blocking is network-wide | The intrusion detection block list applies everywhere at once, not per segment. Caused four outages. [Post-mortem](docs/LIMITATIONS.md) |
+| No second factor on the firewall login | pfSense offers none natively in either edition. Risk accepted for a single-occupant network with no inbound exposure, with reasoning and reattempt criteria recorded. [Detail](docs/LIMITATIONS.md) |
 
 ---
 
@@ -192,9 +213,12 @@ Claims here are tested. Procedures in [testing-procedures.md](operations/testing
 | Wi-Fi 7 access point | Done, May 2026 |
 | Guest network on its own segment | Done, May 2026 |
 | Dedicated recovery port on the firewall | Done, May 2026 |
-| Threat rules on the internal segments | Next, in detection-only first |
+| Wireless hardening, WPA2/WPA3 with PMF | Done, September 2026 |
+| Observability: metrics, dashboards, alerting | Next. Closes the detection gap behind every incident so far |
+| Configuration drift detection | Next. A restore has silently reverted security settings twice |
+| Threat rules on internal segments | In detection-only first |
 | Outbound filtering for smart devices | Planned |
-| Managed switch replacement | Planned. Unblocks the remaining hardening |
+| Managed switch replacement | Planned. Unblocks port security and the remaining hardening |
 | Redundant firewall pair | Under consideration |
 | CCNA exam | Scheduled, October 2026 |
 
@@ -206,7 +230,7 @@ Claims here are tested. Procedures in [testing-procedures.md](operations/testing
 
 System administrator and network engineer, 7+ years across healthcare, education and MSP environments. Active Directory, Intune, pfSense, HIPAA compliance.
 
-This lab is where ideas get tested properly before they inform production work.
+This lab is where ideas get tested properly before they inform production work, and where the failures get written down.
 
 [ajayangdembe.com](https://www.ajayangdembe.com)
 
