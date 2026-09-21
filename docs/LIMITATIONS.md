@@ -159,3 +159,46 @@ The corrective measure was not another configuration change but a detector: an h
 
 - `operations/testing-procedures.md`
 - `keep_local/incidents/suricata-ips-false-positives/` (incident log, kept local: contains addresses)
+
+---
+
+## 3. No multi-factor authentication on the firewall interface
+
+**Date documented:** 2026-09-20
+
+### The constraint
+
+pfSense provides no built-in second factor for web interface logins. Authentication is username and password against the local database, or delegated to an external LDAP or RADIUS server. Time-based one-time passwords are not offered natively.
+
+This is an architectural decision in pfSense, not a limitation of the Community Edition. The paid edition behaves identically. Adding a second factor means running a RADIUS server, typically FreeRADIUS with a one-time-password module, on separate infrastructure.
+
+### Why it matters
+
+The firewall administration interface is reachable from the trusted VLAN, which is also the segment used for daily browsing. A compromised workstation on that segment, through a malicious page or a hostile email attachment, reaches the login page directly. A second factor would make stolen credentials insufficient on their own.
+
+### Risk accepted, with reasoning
+
+The environment is single-occupant with no other administrators and no shared credentials. There are no inbound port forwards, so the interface is unreachable from the internet. Physical access to the premises is monitored.
+
+Under that threat model the realistic attack is a compromised device already inside the trusted segment. A second factor raises the cost of that attack but does not prevent it, since an attacker with code execution on an authenticated workstation can act through the existing session regardless.
+
+Running a RADIUS server to close this would add a service, a dependency, and a new failure mode to a network where the firewall is already a single point of failure. That trade is not justified at this scale.
+
+### Compensating controls in place
+
+- No inbound port forwards; the interface is not reachable from the internet
+- Administrative access removed from the management VLAN, which is broadcast as a wireless network
+- Two administrative paths require physical presence at the firewall: out-of-band on Port 3, and LAN on Port 2
+- Wireless secured with WPA2/WPA3 and Protected Management Frames, closing the offline handshake-cracking path onto the trusted segment
+
+### Available mitigation, not yet applied
+
+Restricting the interface to a single source address would answer most of the same risk without new infrastructure, by ensuring only one workstation can reach the login page rather than every device on the segment. Weighed against the inconvenience of administering from one machine only, and deferred.
+
+### Reattempt criteria
+
+Revisit if any of the following become true:
+
+- A second person administers the network
+- The lab hosts anything reachable from the internet
+- A RADIUS server is deployed for another purpose, at which point the marginal cost approaches zero

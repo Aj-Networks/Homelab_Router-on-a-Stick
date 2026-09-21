@@ -128,6 +128,7 @@ Claims here are tested. Procedures in [testing-procedures.md](operations/testing
 | One firewall | No redundant pair. A port is reserved for a future second unit |
 | Switch capability | This model cannot separate management traffic onto its own segment, which caps how far the design can be hardened. [Post-mortem](docs/LIMITATIONS.md) |
 | Security blocking is network-wide | The intrusion detection block list applies everywhere at once, not per segment. This caused four outages and is documented in full. [Post-mortem](docs/LIMITATIONS.md) |
+| No second factor on the firewall login | pfSense offers none natively, in either edition. Adding one means running a separate authentication server. Risk accepted for a single-occupant network with no inbound exposure, with the reasoning and reattempt criteria written down. [Detail](docs/LIMITATIONS.md) |
 
 ---
 
