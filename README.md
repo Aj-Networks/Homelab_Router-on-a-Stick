@@ -103,20 +103,21 @@ Seven layers. A packet must defeat all of them to leave unencrypted.
 
 ```mermaid
 flowchart LR
-    A[Client packet] --> B[Rule sends it to VPN_FAILOVER]
-    B --> C{Tunnel available?}
-    C -->|Yes| D([NAT on tunnel<br/>encrypted exit])
-    C -->|No| E{Outbound NAT<br/>rule on WAN?}
-    E -->|Segment 50 only| F([Direct exit])
-    E -->|Segments 10 to 40<br/>none exists| G([No translation<br/>no reply can return])
+    A[Client packet] --> B{Which segment?}
+    B -->|10, 20, 30, 40| C[Rule: gateway VPN_FAILOVER]
+    B -->|50| D[Rule: gateway WAN]
+    C --> E{Tunnel available?}
+    E -->|Yes| F([NAT on tunnel<br/>encrypted exit])
+    E -->|No| G([No WAN rule exists<br/>no reply can return])
+    D --> H([WAN NAT rule exists<br/>direct exit])
 
-    style D stroke-width:3px
+    style F stroke-width:3px
     style G stroke-width:3px
 ```
 
-Nothing blocks the last branch. Without a translation the packet keeps a private source address, so no reply can reach it. A leak would need a rule added, not removed.
+The branch is decided by segment, not by failure. Segments 10 to 40 have no WAN translation, so if both tunnels drop the packet keeps a private source address and no reply can reach it. A leak would need a rule added, not removed.
 
-Segment 50 is the deliberate exception: direct internet so the firewall stays reachable when the tunnels are the fault. No admin rights.
+Segment 50 is the deliberate exception, routed to WAN by its own rule rather than falling back to it. That keeps the firewall reachable when the tunnels themselves are the fault. It holds no admin rights.
 
 ---
 
