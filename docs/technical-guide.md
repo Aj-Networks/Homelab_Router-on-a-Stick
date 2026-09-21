@@ -609,7 +609,7 @@ These are Mullvad's internal CGNAT-range DNS resolvers, reachable **only** throu
 
 ## 16. Kill Switch, The Five Layers
 
-A "kill switch" is the property that **if the VPN drops, traffic is blocked, not leaked.** This lab implements it as five independent layers.
+A "kill switch" is the property that **if the VPN drops, nothing usable leaves.** This lab implements it as five independent layers. Note the wording: under Manual Outbound NAT an unmatched packet is forwarded untranslated rather than discarded, so it carries a private source address and no reply can return. The verified claim is absence of usable egress, not a drop at the firewall.
 
 ### 16.1 Layer 1, Manual Outbound NAT with no WAN rules
 

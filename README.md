@@ -99,22 +99,22 @@ Seven layers. A packet must defeat all of them to leave unencrypted.
 | Segment isolation | Private ranges blocked between segments by default |
 | IPv6 dropped | Dual-stack doubles the rule surface and adds silent failure modes |
 | Resolver lock | DNS leaves only through the active tunnel |
-| Fail closed | Both tunnels down means traffic stops. No fallback |
+| Fail closed | Both tunnels down means no usable egress. No translation exists, so no reply can return |
 
 ```mermaid
 flowchart LR
-    A[Client traffic] --> B{Tunnel up?}
-    B -->|Yes| C[NAT on tunnel]
-    C --> D([Encrypted exit])
-    B -->|No| E{WAN NAT rule<br/>for this segment?}
-    E -->|None exists<br/>segments 10 20 30 40| F([Dropped])
-    E -->|One exists<br/>segment 50| G([Direct exit])
+    A[Client packet] --> B[Rule sends it to VPN_FAILOVER]
+    B --> C{Tunnel available?}
+    C -->|Yes| D([NAT on tunnel<br/>encrypted exit])
+    C -->|No| E{Outbound NAT<br/>rule on WAN?}
+    E -->|Segment 50 only| F([Direct exit])
+    E -->|Segments 10 to 40<br/>none exists| G([No translation<br/>no reply can return])
 
     style D stroke-width:3px
-    style F stroke-width:3px
+    style G stroke-width:3px
 ```
 
-**Dropped** is not a block. There is no rule to translate the address, so the packet cannot survive on the internet. A leak would need a rule created, not deleted.
+Nothing blocks the last branch. Without a translation the packet keeps a private source address, so no reply can reach it. A leak would need a rule added, not removed.
 
 Segment 50 is the deliberate exception: direct internet so the firewall stays reachable when the tunnels are the fault. No admin rights.
 
@@ -129,7 +129,7 @@ Tested, not assumed. Procedures in [testing-procedures.md](operations/testing-pr
 | IP, DNS, WebRTC leaks | None. [Evidence](assets/screenshots/ipleak.png) |
 | VPN failover | Secondary took over, nothing escaped during the switch |
 | Segment isolation | Cross-segment access blocked |
-| Kill switch | Both tunnels down, all traffic stopped |
+| Kill switch | Both tunnels down, no traffic reached the internet, real address never appeared |
 
 ---
 

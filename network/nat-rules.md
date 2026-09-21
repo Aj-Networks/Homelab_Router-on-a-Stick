@@ -42,8 +42,13 @@ There are **zero explicit WAN outbound NAT rules**, this is the foundation of th
 
 - **Manual mode is required**, Auto Outbound NAT would create WAN rules automatically, breaking the kill switch
 - **Every subnet has a rule on both tunnels**, ensures clean failover with no gap
-- **No WAN NAT rules exist for client VLANs**, if both VPN tunnels drop, traffic is blocked, not leaked
+- **No WAN NAT rules exist for client VLANs.** If both tunnels drop there is no translation for those subnets, so nothing usable leaves and no reply can return. Verified by the kill switch drill in `operations/testing-procedures.md`: the client's real address never appeared.
+
 - **VLAN 50 NAT rules (6 and 12) are intentionally unused for tunnel egress**, VLAN 50 routes through WAN directly by firewall design via rule 13, so the tunnel rules never match. They're kept to keep the subnet list symmetric across both tunnels.
+
+> [!NOTE]
+> **Precise wording matters here.** Under Manual Outbound NAT a packet with no matching rule is forwarded untranslated rather than dropped; it carries a private source address and dies upstream. Whether the firewall instead discards it depends on **System > Advanced > Miscellaneous > "Skip rules when gateway is down"**, which has not been recorded for this build. The security outcome is the same either way, which is why the documented claim is "no usable egress" rather than "blocked".
+
 
 ---
 
