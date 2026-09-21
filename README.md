@@ -102,19 +102,19 @@ Seven layers. A packet must defeat all of them to leave unencrypted.
 | Fail closed | Both tunnels down means traffic stops. No fallback |
 
 ```mermaid
-flowchart TD
-    A[Client traffic] --> B{VPN tunnel up?}
-    B -->|Yes| C[NAT applied on tunnel interface]
-    C --> D[Leaves encrypted via VPN exit]
-    B -->|No, both tunnels down| E{Does a WAN NAT rule<br/>exist for this segment?}
-    E -->|Segments 10, 20, 30, 40<br/>no rule exists| F[Dropped<br/>private source address<br/>is unroutable]
-    E -->|Segment 50 only<br/>one rule exists| G[Leaves direct, unencrypted]
+flowchart LR
+    A[Client traffic] --> B{Tunnel up?}
+    B -->|Yes| C[NAT on tunnel]
+    C --> D([Encrypted exit])
+    B -->|No| E{WAN NAT rule<br/>for this segment?}
+    E -->|None exists<br/>segments 10 20 30 40| F([Dropped])
+    E -->|One exists<br/>segment 50| G([Direct exit])
 
-    style F stroke-width:3px
     style D stroke-width:3px
+    style F stroke-width:3px
 ```
 
-The kill switch is branch **F**. Nothing blocks that traffic: there is simply no rule to translate its address, so it cannot survive on the internet. A leak would require creating a rule, not deleting one.
+**Dropped** is not a block. There is no rule to translate the address, so the packet cannot survive on the internet. A leak would need a rule created, not deleted.
 
 Segment 50 is the deliberate exception: direct internet so the firewall stays reachable when the tunnels are the fault. No admin rights.
 

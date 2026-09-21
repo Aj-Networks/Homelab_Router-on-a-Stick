@@ -85,21 +85,17 @@ The interface-level `Block Offenders` checkbox controls only which Suricata inst
 
 ```mermaid
 flowchart LR
-    A[IoT VLAN<br/>Suricata] -->|writes| T[(snort2c<br/>ONE global table)]
-    B[Guest VLAN<br/>Suricata] -->|writes| T
-    C[Lab VLAN<br/>Suricata] -->|writes| T
-    D[Mgmt VLAN<br/>Suricata] -->|writes| T
-
-    T -->|enforced on| W[WAN]
-    T -->|enforced on| X[Trusted VLAN]
-    T -->|enforced on| Y[IoT VLAN]
-    T -->|enforced on| Z[Guest VLAN]
+    A[IoT] --> T
+    B[Guest] --> T
+    C[Lab] --> T
+    D[Mgmt] --> T
+    T[(snort2c<br/>one global table)] --> E[Enforced on ALL interfaces<br/>including Trusted]
 
     style T stroke-width:3px
-    style X stroke-width:3px
+    style E stroke-width:3px
 ```
 
-The asymmetry is the trap. Four instances write; every interface enforces. Disabling blocking on the trusted VLAN stops it writing but does nothing to stop it being affected, which is why the first two remediation attempts failed.
+Four instances write, every interface enforces. Disabling blocking on the trusted VLAN stops it writing and does nothing to stop it being affected. That asymmetry is why the first two fixes failed.
 
 ### Why it matters
 
