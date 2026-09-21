@@ -131,6 +131,14 @@ Tested, not assumed. Procedures in [testing-procedures.md](operations/testing-pr
 | Segment isolation | Cross-segment access blocked |
 | Kill switch | Both tunnels down, no traffic reached the internet, real address never appeared |
 
+The central claim is provable in one command. Count the WAN translation rules:
+
+```sh
+pfctl -sn | grep 'nat on igb0'
+```
+
+One line returns, for segment 50. Nothing exists for segments 10 to 40, which is the kill switch: an absence you can verify, not a rule you have to trust.
+
 ---
 
 ## Known limitations
