@@ -103,16 +103,14 @@ Seven layers. A packet must defeat all of them to leave unencrypted.
 
 ```mermaid
 flowchart LR
-    A[Client packet] --> B{Which segment?}
-    B -->|10, 20, 30, 40| C[Rule: gateway VPN_FAILOVER]
-    B -->|50| D[Rule: gateway WAN]
-    C --> E{Tunnel available?}
-    E -->|Yes| F([NAT on tunnel<br/>encrypted exit])
-    E -->|No| G([No WAN rule exists<br/>no reply can return])
-    D --> H([WAN NAT rule exists<br/>direct exit])
+    A[Client packet] --> B{Segment?}
+    B -->|10 20 30 40<br/>gateway VPN_FAILOVER| C{Tunnel up?}
+    B -->|50<br/>gateway WAN| D([Direct exit])
+    C -->|Yes| E([Encrypted exit])
+    C -->|No| F([No WAN rule<br/>no reply possible])
 
+    style E stroke-width:3px
     style F stroke-width:3px
-    style G stroke-width:3px
 ```
 
 The branch is decided by segment, not by failure. Segments 10 to 40 have no WAN translation, so if both tunnels drop the packet keeps a private source address and no reply can reach it. A leak would need a rule added, not removed.
