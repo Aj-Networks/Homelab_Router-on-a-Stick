@@ -587,7 +587,7 @@ A **gateway group** is a pfSense construct that bundles multiple gateways with a
 | `GW_USA_1` | 1 | Active when up |
 | `GW_USA_2` | 2 | Promoted to active if Tier 1 is down |
 
-Gateway health is monitored by pfSense via Internet Control Message Protocol (ICMP) probes (`apinger` / `dpinger` daemon). If three consecutive probes fail to reach the Mullvad endpoint, the tunnel is marked down and Tier 2 is promoted within ~30 seconds.
+Gateway health is monitored by pfSense via Internet Control Message Protocol (ICMP) probes (`apinger` / `dpinger` daemon). If three consecutive probes to the gateway's monitor IP fail, the tunnel is marked down and Tier 2 is promoted within ~30 seconds.
 
 ### 15.4 Why "VPN_FAILOVER" is referenced everywhere
 
