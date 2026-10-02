@@ -372,9 +372,10 @@ pfSense Unbound resolver
    |  - if blocklisted: synthesize answer = 10.10.99.1 (DNSBL VIP)
    |  - if not: continue
    |
-   |  Recursive query to upstream Mullvad resolvers
-   |     100.64.0.x  via INT_USA_1
-   |     100.64.0.x  via INT_USA_2
+   |  Upstream query, pinned to each tunnel by a host route
+   |     9.9.9.9  via INT_USA_1
+   |     1.1.1.1  via INT_USA_2
+   |  Mullvad intercepts port 53 in-tunnel and answers itself
    v
 Authoritative answer → Unbound → client
 ```
@@ -396,10 +397,10 @@ Running Unbound in resolver mode (rather than forwarder mode) means clients are 
 |---|---|
 | Outbound on each VLAN | Firewall rule: `Block UDP 53` to anywhere except the VLAN gateway |
 | DoH/DoT block | Firewall rule: `Block` to `DOH_IPS` alias on TCP/UDP 443-853 |
-| pfSense system DNS | Configured as Mullvad addresses only, no ISP fallback |
+| pfSense system DNS | `9.9.9.9` / `1.1.1.1`, each bound to a tunnel gateway and answered by Mullvad in-tunnel, no ISP fallback |
 | Outbound NAT | Only the VPN tunnel interfaces have NAT rules, DNS queries cannot leave via WAN |
 
-**Net effect:** there is no possible code path by which a client query reaches the ISP DNS or any non-Mullvad resolver. If a client tries to bypass with `dig @8.8.8.8` it gets blocked by the port-53 rule. If it tries DoH (DNS-over-HTTPS) on `1.1.1.1:443` it gets blocked by the DoH alias rule. If pfSense fails over to Tier 2, system DNS swings to the Tier 2 Mullvad address, still encrypted, still inside the tunnel.
+**Net effect:** there is no possible code path by which a client query reaches the ISP DNS or any non-Mullvad resolver. If a client tries to bypass with `dig @8.8.8.8` it gets blocked by the port-53 rule. If it tries DoH (DNS-over-HTTPS) on `1.1.1.1:443` it gets blocked by the DoH alias rule. If pfSense fails over to Tier 2, system DNS swings to the Tier 2 forwarder, still inside the tunnel, still answered by Mullvad.
 
 ---
 
@@ -600,10 +601,12 @@ Every per-VLAN egress rule (Rule 8 on VLAN 10, Rule 7 on VLAN 50, etc.) sets the
 
 | DNS server | Reached via |
 |---|---|
-| 100.64.0.x (Tier 1) | INT_USA_1 |
-| 100.64.0.x (Tier 2) | INT_USA_2 |
+| `9.9.9.9` (Tier 1) | INT_USA_1 |
+| `1.1.1.1` (Tier 2) | INT_USA_2 |
 
-These are Mullvad's internal CGNAT-range DNS resolvers, reachable **only** through the corresponding tunnel. pfSense's system DNS configuration lists both. Unbound forwards out via these. There is no fallback to ISP DNS, public DNS, or any non-Mullvad provider.
+Each address is also that gateway's Monitor IP, so pfSense installs a host route pinning it to the tunnel (`netstat -rn` shows `tun_wg`). Mullvad's WireGuard servers intercept all port 53 traffic, so queries are answered by Mullvad's resolver, not Quad9 or Cloudflare. Verified 2026-10-02: `dig TXT whoami.ds.akahelp.net @9.9.9.9` returns a Mullvad exit-host address. There is no fallback to ISP DNS.
+
+Mullvad's `100.64.0.x` resolvers were used until 2026-08-06 and dropped: pfSense does not route gateway-bound DNS servers, so they never answered. See [`vpn/dns-resilience.md`](../vpn/dns-resilience.md).
 
 ---
 
