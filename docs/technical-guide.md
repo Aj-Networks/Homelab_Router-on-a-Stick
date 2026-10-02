@@ -380,16 +380,15 @@ pfSense Unbound resolver
 Authoritative answer → Unbound → client
 ```
 
-### 11.2 Why use Unbound (not Forwarder mode)?
+### 11.2 Why Unbound runs in forwarding mode
 
-**Unbound** is a recursive, validating, caching DNS resolver. It can:
+Unbound runs with **DNS Query Forwarding** enabled. It still:
 
-- Perform full recursion (root → Top-Level Domain (TLD) → authoritative)
-- Cache responses to reduce upstream queries
-- Validate DNSSEC signatures (when enabled)
-- Be hooked by pfBlockerNG for inline filtering
+- Caches responses to reduce upstream queries
+- Validates DNSSEC signatures (when enabled)
+- Hosts the pfBlockerNG hook for inline filtering
 
-Running Unbound in resolver mode (rather than forwarder mode) means clients are not dependent on a single upstream and queries do not all go to one provider.
+Full recursion is not possible here. Mullvad's WireGuard servers intercept all port 53 traffic, so queries to root and authoritative servers would be answered by Mullvad regardless. Forwarding makes that path explicit. Every query resolves at Mullvad, which already carries all egress traffic, so no additional party sees DNS.
 
 ### 11.3 The DNS lock
 
