@@ -90,8 +90,8 @@ A resilient DNS stack must:
 
 | # | Address | Hostname | Gateway |
 |---|---|---|---|
-| 1 | `1.1.1.1` | (blank) | `GW_USA_1` |
-| 2 | `9.9.9.9` | (blank) | `GW_USA_2` |
+| 1 | `9.9.9.9` | (blank) | `GW_USA_1` |
+| 2 | `1.1.1.1` | (blank) | `GW_USA_2` |
 
 `DNS Server Override`: unchecked.
 `DNS Resolution Behavior`: Use local DNS (127.0.0.1), fall back to remote DNS Servers (Default).
@@ -159,8 +159,8 @@ All other Advanced Settings left at defaults.
 
 | Gateway | Monitor IP |
 |---|---|
-| `GW_USA_1` | `1.1.1.1` (Cloudflare) |
-| `GW_USA_2` | `9.9.9.9` (Quad9) |
+| `GW_USA_1` | `9.9.9.9` (Quad9) |
+| `GW_USA_2` | `1.1.1.1` (Cloudflare) |
 
 Each must be public, on the far side of the tunnel, and unique per gateway.
 

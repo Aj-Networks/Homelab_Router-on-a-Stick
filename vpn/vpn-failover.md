@@ -53,8 +53,8 @@ Each gateway needs a **unique** Monitor IP. pfSense installs one static route pe
 
 | Gateway | Monitor IP | Notes |
 |---|---|---|
-| `GW_USA_1` | `1.1.1.1` | Cloudflare, public anycast, distinct per gateway |
-| `GW_USA_2` | `9.9.9.9` | Quad9, public anycast, distinct per gateway |
+| `GW_USA_1` | `9.9.9.9` | Quad9, public anycast, distinct per gateway |
+| `GW_USA_2` | `1.1.1.1` | Cloudflare, public anycast, distinct per gateway |
 
 ICMP travels through each respective tunnel. No ISP leak: the WAN sees only encrypted WireGuard packets, and the remote target sees Mullvad's exit IP, not yours.
 
@@ -89,7 +89,7 @@ Same per-server reuse problem - it is also reused across servers. Distinct IPs p
 
 | Setting | Value |
 |---|---|
-| DNS Servers | Two entries: `1.1.1.1` mapped to `GW_USA_1`, `9.9.9.9` mapped to `GW_USA_2` |
+| DNS Servers | Two entries: `9.9.9.9` mapped to `GW_USA_1`, `1.1.1.1` mapped to `GW_USA_2` |
 | DNS Hostname | Blank on both |
 | DNS Server Override | Unchecked |
 | DNS Resolution Behavior | Use local DNS (127.0.0.1), fall back to remote DNS Servers |
@@ -311,7 +311,7 @@ If a tunnel fails to come up, check Status > WireGuard > Peers for "Latest hands
 - Failover Tier 1 > Tier 2 confirmed under simulated tunnel failure (manual peer disable)
 - Zero DNS/IP/WebRTC leaks confirmed via [ipleak.net](https://ipleak.net) and [Mullvad Check](https://mullvad.net/en/check) on both tunnels
 - DNS remains on Mullvad servers throughout failover, no ISP DNS exposure
-- Each gateway health-checks via a distinct public DNS IP (`GW_USA_1` = 1.1.1.1, `GW_USA_2` = 9.9.9.9). ICMP routes through respective tunnel, no ISP leak
+- Each gateway health-checks via a distinct public DNS IP (`GW_USA_1` = 9.9.9.9, `GW_USA_2` = 1.1.1.1). ICMP routes through respective tunnel, no ISP leak
 
 ---
 
