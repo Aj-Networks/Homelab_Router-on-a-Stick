@@ -76,15 +76,6 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 
 Third octet matches the segment ID, so `10.10.20.5` is recognisably segment 20 in any log.
 
-<details>
-<summary><b>Addressing detail</b></summary>
-
-<p align="center">
-  <img src="assets/diagrams/vlan-ip-detail.png" alt="VLAN and IP detail" width="100%"/>
-</p>
-
-</details>
-
 ---
 
 ## Egress controls
