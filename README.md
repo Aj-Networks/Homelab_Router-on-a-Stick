@@ -17,7 +17,7 @@
 </div>
 
 <p align="center">
-  <img src="assets/diagrams/network-topology.png" alt="Network topology" width="100%"/>
+  <img src="assets/diagrams/network-topology.png?v=2" alt="Network topology" width="100%"/>
 </p>
 
 The kill switch is the **absence** of a rule, not the presence of one. No rule permits unencrypted traffic to the internet, so a leak would have to be created rather than allowed.
